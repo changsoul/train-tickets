@@ -37,7 +37,7 @@ public abstract class HostConfig {
 				// .setStaleConnectionCheckEnabled(true)
 				.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
 				.setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC))
-				.setConnectionRequestTimeout(1000).setConnectTimeout(5000).setSocketTimeout(6000)
+				.setConnectionRequestTimeout(500).setConnectTimeout(5000).setSocketTimeout(6000)
 				.build();
 	}
 
@@ -50,6 +50,8 @@ public abstract class HostConfig {
 	}
 
 	abstract public HttpHost getHost();
+	
+	abstract public String getHostUrl();
 
 	public RequestConfig getRequestConfig() {
 		return defaultRequestConfig;

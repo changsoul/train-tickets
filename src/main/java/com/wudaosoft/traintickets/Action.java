@@ -15,7 +15,9 @@
  */
 package com.wudaosoft.traintickets;
 
+import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +41,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.JLabel;
 
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -49,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.wudaosoft.traintickets.cons.ApiCons;
 import com.wudaosoft.traintickets.exception.ServiceException;
 import com.wudaosoft.traintickets.form.MainForm;
 import com.wudaosoft.traintickets.form.MyButton;
@@ -57,9 +61,10 @@ import com.wudaosoft.traintickets.model.LoginInfo;
 import com.wudaosoft.traintickets.model.UserInfo;
 import com.wudaosoft.traintickets.net.CookieUtil;
 import com.wudaosoft.traintickets.net.DomainConfig;
+import com.wudaosoft.traintickets.net.HostConfig;
 import com.wudaosoft.traintickets.net.Request;
+import com.wudaosoft.traintickets.net.TicketsHostConfig;
 import com.wudaosoft.traintickets.util.DateUtil;
-import com.wudaosoft.traintickets.util.EncryptUtil;
 import com.wudaosoft.traintickets.util.StringUtils;
 
 /**
@@ -87,7 +92,9 @@ public class Action {
 	private ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 	private ScheduledExecutorService timerExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-	private Request request = new Request();
+	private HostConfig hostConfig;
+	
+	private Request request;
 
 	private Calendar serverTime;
 
@@ -112,6 +119,8 @@ public class Action {
 	}
 
 	private Action() {
+		hostConfig = new TicketsHostConfig();
+		request = new Request(hostConfig);
 		timPeriod = 0;
 		serverTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+8"), Locale.US);
 	}
@@ -147,7 +156,7 @@ public class Action {
 	 */
 	public LoginInfo preLogin(UserInfo userInfo) throws Exception {
 
-		String loginForm = request.get(DomainConfig.DOMAIN, DomainConfig.LOGIN_PAGE, userInfo.getContext());
+		String loginForm = request.get(hostConfig.getHostUrl(), DomainConfig.LOGIN_PAGE, userInfo.getContext());
 
 		LoginInfo info = new LoginInfo();
 		info.set_1_(findHiddenInputValue(loginForm, "_1_"));
@@ -169,23 +178,33 @@ public class Action {
 	 * @return
 	 * @throws Exception
 	 */
-	public JSONObject login(UserInfo userInfo, String imagCheck) throws Exception {
+	public JSONObject captchaCheck(String answer, UserInfo userInfo) throws Exception {
+		
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("answer", answer);
+		params.put("login_site", "E");
+		params.put("rand", "sjrand");
+		
+		return request.postAjax(hostConfig.getHostUrl(), ApiCons.AJAX_CAPTCHA_CHECK, params, userInfo.getContext());
+	}
+	
+	/**
+	 * 登录
+	 * 
+	 * @param userInfo
+	 * @param imagCheck
+	 * @param info
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONObject login(String username, String password, UserInfo userInfo) throws Exception {
 
-		LoginInfo info = preLogin(userInfo);
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("username", username);
+		params.put("password", password);
+		params.put("appid", ApiCons.APP_ID);
 
-		String pwd = EncryptUtil.encrypt(info.get_1_(), userInfo.getPassword());
-		Map<String, String> params = new HashMap<>();
-		params.put("LOGINID", userInfo.getLoginId());
-		params.put("PASSWORD", pwd);
-		params.put("IMAGCHECK", imagCheck);
-		params.put("ISCA", "false");
-		params.put("CAMY", "");
-		params.put("ticket", info.getTicket());
-		params.put("des_key", info.getDesKey());
-		params.put("subsys", info.getSubsys());
-		params.put("SUBSYS", info.getSubsys().toUpperCase());
-
-		return request.postAjax(DomainConfig.DOMAIN, DomainConfig.AJAX_LOGIN, params, userInfo.getContext());
+		return request.postAjax(hostConfig.getHostUrl(), ApiCons.AJAX_LOGIN, params, userInfo.getContext());
 	}
 
 	/**
@@ -198,10 +217,10 @@ public class Action {
 		
 		String sessionId = CookieUtil.getCookieValue("JSESSIONIDGDLDWQ", userInfo.getContext().getCookieStore());
 		
-		Map<String, String> params = new HashMap<>();
+		Map<String, String> params = new HashMap<String, String>();
 		params.put("sessionid", sessionId);
 
-		JSONObject data = request.postAjax(DomainConfig.DOMAIN, DomainConfig.AJAX_LOGOUT, params,
+		JSONObject data = request.postAjax(hostConfig.getHostUrl(), DomainConfig.AJAX_LOGOUT, params,
 				userInfo.getContext());
 
 		log.debug("UserId[" + userInfo.getLoginId() + "] logout data: " + data);
@@ -330,7 +349,7 @@ public class Action {
 					SimpleDateFormat format = new SimpleDateFormat(SERVER_TIME_PATTEN, Locale.US);
 					format.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-					String dateStr = request.getServerTime(DomainConfig.DOMAIN, DomainConfig.NETWORK_CHECK,
+					String dateStr = request.getServerTime(hostConfig.getHostUrl(), DomainConfig.NETWORK_CHECK,
 							systemContext);
 					setTimer(timeStatusbar);
 
@@ -378,7 +397,7 @@ public class Action {
 			public void run() {
 				try {
 
-					request.sendHeartbeat(DomainConfig.DOMAIN, DomainConfig.IMAGE_CHECK, userInfo.getContext());
+					request.sendHeartbeat(hostConfig.getHostUrl(), DomainConfig.IMAGE_CHECK, userInfo.getContext());
 
 					log.info(String.format("send heartbeat by userId: %s", userInfo.getLoginId()));
 				} catch (Exception e) {
@@ -400,7 +419,7 @@ public class Action {
 			public void run() {
 				try {
 
-					long daly = request.testNetworkDaly(DomainConfig.DOMAIN, DomainConfig.NETWORK_CHECK, systemContext);
+					long daly = request.testNetworkDaly(hostConfig.getHostUrl(), DomainConfig.NETWORK_CHECK, systemContext);
 
 					speedStatusbar.setText("网络延时：" + daly + "ms");
 				} catch (Exception e) {
@@ -448,7 +467,7 @@ public class Action {
 	 */
 	public String getResultPageSourceCode(UserInfo userInfo) throws Exception {
 
-		return request.get(DomainConfig.DOMAIN, DomainConfig.QUERY_RESULT, userInfo.getContext());
+		return request.get(hostConfig.getHostUrl(), DomainConfig.QUERY_RESULT, userInfo.getContext());
 	}
 
 	
@@ -469,7 +488,7 @@ public class Action {
 	 
 
 	/*public JSONObject getApplyRecord(UserInfo userInfo) throws Exception {
-		Map<String, String> params = new HashMap<>();
+		Map<String, String> params = new HashMap<String, String>();
 		params.put("confid", "ldlzy_gryw_grbtsb_bt_q_l");
 		params.put("dynDictWhereCls", "null");
 		params.put("dsId", "");
@@ -477,7 +496,7 @@ public class Action {
 		params.put("pageSize", "20");
 		params.put("whereCls", "  a.BCC859 = c.BCC859(+)  and a.BCC857 = '2553150' and a.BOE545='01'");
 
-		JSONObject data = request.postAjax(DomainConfig.DOMAIN, DomainConfig.GLT_PAGE, params, userInfo.getContext());
+		JSONObject data = request.postAjax(hostConfig.getHostUrl(), DomainConfig.GLT_PAGE, params, userInfo.getContext());
 
 		log.debug("UserId[" + userInfo.getLoginId() + "] apply record data: " + data);
 
@@ -544,13 +563,13 @@ public class Action {
 	
 	public Map<String, Object> getApplyPageData(UserInfo userInfo) throws Exception {
 		
-		String html = request.get(DomainConfig.DOMAIN, DomainConfig.APPLY_DADA_PAGE, userInfo.getContext());
+		String html = request.get(hostConfig.getHostUrl(), DomainConfig.APPLY_DADA_PAGE, userInfo.getContext());
 		
 		//log.debug("UserId[" + userInfo.getLoginId() + "] getApplyPageData source code: " + html);
 		
 		Document doc = Jsoup.parse(html);
 		Elements elements = doc.select("form[name='gtForm'] input, form[name='gtForm'] select");
-		Map<String, Object> data = new HashMap<>();
+		Map<String, Object> data = new HashMap<String, Object>();
 		
 //		elements.forEach(e -> {
 //			
@@ -598,7 +617,7 @@ public class Action {
 	 * @throws Exception
 	 */
 	public boolean checkIfHasSubmitted(String id, UserInfo userInfo) throws Exception {
-		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("BCC859", id);
 
 		String rs = doService("btxxService.checkIfHasSubmitted", params, userInfo);
@@ -639,11 +658,11 @@ public class Action {
 			params.put("BCC859", obj.getString("YWLSH"));
 			params.put("readOnly", "true");
 			
-			Map<String, String> pars = new HashMap<>();
+			Map<String, String> pars = new HashMap<String, String>();
 			
 			//params.entrySet().forEach(e -> pars.put(e.getKey(), e.getValue().toString()));
 			
-			String subRs = request.post(DomainConfig.DOMAIN, DomainConfig.APPLY_DADA_SUBMIT, pars, userInfo.getContext());
+			String subRs = request.post(hostConfig.getHostUrl(), DomainConfig.APPLY_DADA_SUBMIT, pars, userInfo.getContext());
 			
 			log.debug("UserId[" + userInfo.getLoginId() + "] submitApplyData: " + subRs);
 			
@@ -656,7 +675,7 @@ public class Action {
 	public Map<String, Object> getZsxx(UserInfo userInfo) throws Exception {
 		
 		Map<String, Object> data = userInfo.getApplyData();
-		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<String, Object>();
 		
 		params.put("BHE034", data.get("BHE034"));// 证书类别
 		params.put("CCE029", data.get("CCE029"));// 证书级别
@@ -718,9 +737,9 @@ public class Action {
 
 		String[] acts = serviceName.split("\\.");
 
-		List<Map<String, Object>> list = new ArrayList<>();
+		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 
-		Map<String, Object> map = new HashMap<>();
+		Map<String, Object> map = new HashMap<String, Object>();
 
 		map.put("serviceId", acts[0]);
 		map.put("method", acts[1]);
@@ -728,14 +747,14 @@ public class Action {
 
 		list.add(map);
 
-		Map<String, String> tmpParams = new HashMap<>();
+		Map<String, String> tmpParams = new HashMap<String, String>();
 		tmpParams.put("parameters", JSON.toJSONString(list));
 		tmpParams.put("method", "{}");
 		tmpParams.put("shareArguments", "{}");
 
 		log.debug("UserId[" + userInfo.getLoginId() + "] doService: " + serviceName + ", parameter: " + JSON.toJSONString(tmpParams));
 		
-		JSONObject result = request.postAjax(DomainConfig.DOMAIN, DomainConfig.AJAX_ADAPTER, tmpParams,
+		JSONObject result = request.postAjax(hostConfig.getHostUrl(), DomainConfig.AJAX_ADAPTER, tmpParams,
 				userInfo.getContext());
 
 		log.debug("UserId[" + userInfo.getLoginId() + "] doService: " + serviceName + ", result: " + result);
@@ -781,27 +800,12 @@ public class Action {
 			return "";
 		}
 	}
-
-	class CheckImageCallable implements Callable<BufferedImage> {
-
-		private UserInfo userInfo;
-
-		/**
-		 * 
-		 */
-		public CheckImageCallable(UserInfo user) {
-			this.userInfo = user;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.util.concurrent.Callable#call()
-		 */
-		@Override
-		public BufferedImage call() throws Exception {
-			return request.getImage(DomainConfig.DOMAIN, DomainConfig.IMAGE_CHECK, userInfo.getContext());
-		}
+	
+	public Image getCaptchaImage(UserInfo userInfo) throws Exception {
+		
+		String api = ApiCons.CAPTCHA_IMAGE + "?login_site=E&module=login&rand=sjrand&" + Math.random();
+		
+		return request.getImage(hostConfig.getHostUrl(), api, userInfo.getContext());
 	}
 
 	/**

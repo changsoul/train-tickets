@@ -17,8 +17,6 @@ package com.wudaosoft.traintickets.net;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -30,24 +28,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
 
 import javax.imageio.ImageIO;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
 
 import org.apache.http.Consts;
 import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpRequestRetryHandler;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -57,7 +51,6 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
-import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
@@ -65,6 +58,7 @@ import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeaderElementIterator;
@@ -85,55 +79,39 @@ import com.alibaba.fastjson.JSONObject;
  * 
  */
 public class Request {
-	
-	private static final int CONNECT_TIME_OUT = 5 * 1000;
-	private static final int READ_TIME_OUT = 8 * 1000;
-	
-	private ScheduledExecutorService executorService;
-	
+
 	private HostConfig hostConfig;
 	private CloseableHttpClient httpClient;
 	private PoolingHttpClientConnectionManager connManager;
-	
+
 	public Request(HostConfig hc) {
 		this.hostConfig = hc;
 		try {
 			init();
-		} catch (KeyManagementException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (KeyStoreException e) {
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	protected void init() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
-		
+	protected void init() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException,
+			CertificateException, IOException {
+
 		SSLConnectionSocketFactory sslConnectionSocketFactory = null;
-		
-		if(hostConfig.getCA() != null) {
-			//Trust 12306 CA and all self-signed certs
-	        SSLContext sslcontext = SSLContexts.custom()
-	                .loadTrustMaterial(hostConfig.getCA(), hostConfig.getCAPassword(),
-	                        new TrustSelfSignedStrategy())
-	                .build();
-	        
-	        // Allow TLSv1 protocol only
-	        sslConnectionSocketFactory = new SSLConnectionSocketFactory(
-	                sslcontext,
-	                new String[] { "TLSv1" },
-	                null,
-	                SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+
+		if (hostConfig.getCA() != null) {
+			// Trust root CA and all self-signed certs
+			SSLContext sslcontext = SSLContexts.custom()
+					.loadTrustMaterial(hostConfig.getCA(), hostConfig.getCAPassword(), new TrustSelfSignedStrategy())
+					.build();
+
+			// Allow TLSv1 protocol only
+			sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslcontext, new String[] { "TLSv1" }, null,
+					SSLConnectionSocketFactory.getDefaultHostnameVerifier());
 		} else {
 			sslConnectionSocketFactory = SSLConnectionSocketFactory.getSocketFactory();
 		}
-        
-        ConnectionKeepAliveStrategy myKeepAliveStrategy = new ConnectionKeepAliveStrategy() {
+
+		ConnectionKeepAliveStrategy myKeepAliveStrategy = new ConnectionKeepAliveStrategy() {
 
 			public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
 				// Honor 'keep-alive' header
@@ -150,21 +128,22 @@ public class Request {
 						}
 					}
 				}
-//				HttpHost target = (HttpHost) context.getAttribute(HttpClientContext.HTTP_TARGET_HOST);
-//				if ("kyfw.12306.cn".equalsIgnoreCase(target.getHostName())) {
-//					// Keep alive for 5 seconds only
-//					return 3 * 1000;
-//				} else {
-//					// otherwise keep alive for 30 seconds
-//					return 30 * 1000;
-//				}
-				
+				// HttpHost target = (HttpHost)
+				// context.getAttribute(HttpClientContext.HTTP_TARGET_HOST);
+				// if ("kyfw.12306.cn".equalsIgnoreCase(target.getHostName())) {
+				// // Keep alive for 5 seconds only
+				// return 3 * 1000;
+				// } else {
+				// // otherwise keep alive for 30 seconds
+				// return 30 * 1000;
+				// }
+
 				return 30 * 1000;
 			}
 
 		};
 
-		HttpRequestRetryHandler myRetryHandler = new HttpRequestRetryHandler() {
+		/*HttpRequestRetryHandler myRetryHandler = new HttpRequestRetryHandler() {
 
 			public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
 				if (executionCount >= 3) {
@@ -197,15 +176,18 @@ public class Request {
 				return false;
 			}
 
-		};
+		};*/
 		
-		connManager = new PoolingHttpClientConnectionManager(RegistryBuilder.<ConnectionSocketFactory> create()
+		//不重试
+		HttpRequestRetryHandler myRetryHandler = new DefaultHttpRequestRetryHandler(0, false);
+
+		connManager = new PoolingHttpClientConnectionManager(RegistryBuilder.<ConnectionSocketFactory>create()
 				.register("http", PlainConnectionSocketFactory.getSocketFactory())
 				.register("https", sslConnectionSocketFactory).build());
-		
+
 		connManager.setMaxTotal(400);
 		connManager.setDefaultMaxPerRoute(50);
-		connManager.setMaxPerRoute(new HttpRoute(hostConfig.getHost()), 300);
+		connManager.setMaxPerRoute(new HttpRoute(hostConfig.getHost(), null, !HttpHost.DEFAULT_SCHEME_NAME.equals(hostConfig.getHost().getSchemeName())), 300);
 		// connManager.setValidateAfterInactivity(2000);
 
 		// Create socket configuration
@@ -213,63 +195,48 @@ public class Request {
 		connManager.setDefaultSocketConfig(socketConfig);
 
 		// Create connection configuration
-		ConnectionConfig connectionConfig = ConnectionConfig.custom()
-				.setMalformedInputAction(CodingErrorAction.IGNORE)
+		ConnectionConfig connectionConfig = ConnectionConfig.custom().setMalformedInputAction(CodingErrorAction.IGNORE)
 				.setUnmappableInputAction(CodingErrorAction.IGNORE).setCharset(Consts.UTF_8).build();
 		connManager.setDefaultConnectionConfig(connectionConfig);
 
 		httpClient = HttpClients.custom().setConnectionManager(connManager).setKeepAliveStrategy(myKeepAliveStrategy)
-				.setDefaultRequestConfig(hostConfig.getRequestConfig()).setRetryHandler(myRetryHandler)
-				.build();
+				.setDefaultRequestConfig(hostConfig.getRequestConfig()).setRetryHandler(myRetryHandler).build();
 		
-//		executorService = Executors.newSingleThreadScheduledExecutor();
-//		executorService.scheduleWithFixedDelay(new Runnable() {
-//			public void run() {
-//				// Close expired connections  
-//				connManager.closeExpiredConnections();  
-//                // Optionally, close connections  
-//                // that have been idle longer than 45 sec  
-//				connManager.closeIdleConnections(45, TimeUnit.SECONDS);
-//			}
-//		}, 0, 75, TimeUnit.SECONDS);
-	}
-	
-	public String get(final String domain, String urlSuffix, HttpClientContext context) throws Exception {
-
-		return get(domain, urlSuffix, null, context);
+		new IdleConnectionMonitorThread(connManager).start();
 	}
 
-	public String get(final String domain, String urlSuffix, Map<String, String> params, HttpClientContext context)
+	public String get(final String hostUrl, String urlSuffix, HttpClientContext context) throws Exception {
+
+		return get(hostUrl, urlSuffix, null, context);
+	}
+
+	public String get(final String hostUrl, String urlSuffix, Map<String, String> params, HttpClientContext context)
 			throws Exception {
-		String url = "https://" + domain + urlSuffix;
+		String url = hostUrl + urlSuffix;
 		url = buildReqUrl(url, params);
 
 		HttpGet httpGet = new HttpGet(url);
-
-//		httpGet.setConfig(getRequestConfig());
 
 		setHeader(httpGet, context);
 
 		return getHttpClient().execute(httpGet, new StringResponseHandler(), context);
 	}
 
-	public JSONObject getAjax(final String domain, String urlSuffix, HttpClientContext context) throws Exception {
+	public JSONObject getAjax(final String hostUrl, String urlSuffix, HttpClientContext context) throws Exception {
 
-		return getAjax(domain, urlSuffix, null, context);
+		return getAjax(hostUrl, urlSuffix, null, context);
 	}
 
 	/**
 	 * Ajax get请求，只请求一次，不做重试
 	 */
-	public JSONObject getAjax(final String domain, String urlSuffix, Map<String, String> params,
+	public JSONObject getAjax(final String hostUrl, String urlSuffix, Map<String, String> params,
 			HttpClientContext context) throws Exception {
 
-		String url = "https://" + domain + urlSuffix;
+		String url = hostUrl + urlSuffix;
 		url = buildReqUrl(url, params);
 
 		HttpGet httpGet = new HttpGet(url);
-
-		httpGet.setConfig(getRequestConfig());
 
 		setAjaxHeader(httpGet, context);
 		setHeader(httpGet, context);
@@ -280,60 +247,54 @@ public class Request {
 	/**
 	 * post请求，只请求一次，不做重试
 	 */
-	public String post(final String domain, String urlSuffix, Map<String, String> params,
-			HttpClientContext context) throws Exception {
+	public String post(final String hostUrl, String urlSuffix, Map<String, String> params, HttpClientContext context)
+			throws Exception {
 
-		String url = "https://" + domain + urlSuffix;
+		String url = hostUrl + urlSuffix;
 		url = buildReqUrl(url);
 
 		HttpPost httpPost = new HttpPost(url);
 
-		httpPost.setConfig(getRequestConfig());
-
 		setHeader(httpPost, context);
-		
-		if(params != null) {
+
+		if (params != null) {
 			UrlEncodedFormEntity postEntity = buildUrlEncodedFormEntity(params);
 			httpPost.setEntity(postEntity);
 		}
 
 		return getHttpClient().execute(httpPost, new StringResponseHandler(), context);
 	}
-	
+
 	/**
 	 * Ajax post请求，只请求一次，不做重试
 	 */
-	public JSONObject postAjax(final String domain, String urlSuffix, Map<String, String> params,
+	public JSONObject postAjax(final String hostUrl, String urlSuffix, Map<String, String> params,
 			HttpClientContext context) throws Exception {
-		
-		String url = "https://" + domain + urlSuffix;
+
+		String url = hostUrl + urlSuffix;
 		url = buildReqUrl(url);
-		
+
 		HttpPost httpPost = new HttpPost(url);
-		
-		httpPost.setConfig(getRequestConfig());
-		
+
 		setAjaxHeader(httpPost, context);
 		setHeader(httpPost, context);
-		
-		if(params != null) {
+
+		if (params != null) {
 			UrlEncodedFormEntity postEntity = buildUrlEncodedFormEntity(params);
 			httpPost.setEntity(postEntity);
 		}
-		
+
 		return getHttpClient().execute(httpPost, new JsonResponseHandler(), context);
 	}
 
-	public BufferedImage getImage(final String domain, String urlSuffix, HttpClientContext context)
-			throws ClientProtocolException, IOException, Exception {
-		String url = "https://" + domain + urlSuffix + "?d=" + new Date().toString();
+	public BufferedImage getImage(final String hostUrl, String urlSuffix, HttpClientContext context)
+			throws Exception {
+		String url = hostUrl + urlSuffix;
 		url = buildReqUrl(url);
 
 		HttpGet httpGet = new HttpGet(url);
-		httpGet.setConfig(getRequestConfig());
-		
+
 		httpGet.addHeader("Accept", "image/webp,image/*,*/*;q=0.8");
-		httpGet.addHeader("Referer", "https://210.76.66.109:7006/gdweb/ggfw/web/pub/mainpage/mainpageldl.do");
 		setHeader(httpGet, context);
 
 		HttpResponse response = getHttpClient().execute(httpGet, context);
@@ -352,51 +313,49 @@ public class Request {
 		}
 	}
 
-	public void sendHeartbeat(final String domain, String urlSuffix, HttpClientContext context) throws Exception {
-		String url = "https://" + domain + urlSuffix + "?d=" + new Date().toString();
+	public void sendHeartbeat(final String hostUrl, String urlSuffix, HttpClientContext context) throws Exception {
+		String url = hostUrl + urlSuffix + "?d=" + new Date().toString();
 		url = buildReqUrl(url);
 		HttpGet httpGet = new HttpGet(url);
-		httpGet.setConfig(getRequestConfig());
 		httpGet.addHeader("Accept", "image/webp,image/*,*/*;q=0.8");
-		httpGet.addHeader("Referer", "https://210.76.66.109:7006/gdweb/ggfw/web/pub/mainpage/mainpageldl.do");
 		setHeader(httpGet, context);
 
-		HttpClient httpclient  = getHttpClient();
+		HttpClient httpclient = getHttpClient();
 		httpclient.execute(httpGet, context);
-		
+
 		httpGet.releaseConnection();
 	}
-	
-	public String getServerTime(final String domain, String urlSuffix, HttpClientContext systemContext) throws Exception {
-		String url = "https://" + domain + urlSuffix;
-		
+
+	public String getServerTime(final String hostUrl, String urlSuffix, HttpClientContext systemContext)
+			throws Exception {
+		String url = hostUrl + urlSuffix;
+
 		HttpGet httpGet = new HttpGet(url);
-		httpGet.setConfig(getRequestConfig());
 		setHeader(httpGet, systemContext);
-		
-		HttpClient httpclient  = getHttpClient();
+
+		HttpClient httpclient = getHttpClient();
 		HttpResponse response = httpclient.execute(httpGet, systemContext);
-		
+
 		String date = response.getHeaders("Date")[0].getValue();
 		httpGet.releaseConnection();
 		return date;
 	}
-	
-	public long testNetworkDaly(final String domain, String urlSuffix, HttpClientContext systemContext) throws Exception {
-		String url = "https://" + domain + urlSuffix + "?_r=" + UUID.randomUUID().toString();
-		
+
+	public long testNetworkDaly(final String hostUrl, String urlSuffix, HttpClientContext systemContext)
+			throws Exception {
+		String url = hostUrl + urlSuffix + "?_r=" + UUID.randomUUID().toString();
+
 		HttpGet httpGet = new HttpGet(url);
-		httpGet.setConfig(getRequestConfig());
 		setHeader(httpGet, systemContext);
-		
-		HttpClient httpclient  = getHttpClient();
-		
+
+		HttpClient httpclient = getHttpClient();
+
 		long beginTimemillis = System.currentTimeMillis();
-		
+
 		httpclient.execute(httpGet, systemContext);
-		
+
 		long endTimemillis = System.currentTimeMillis();
-		
+
 		httpGet.releaseConnection();
 		return endTimemillis - beginTimemillis;
 	}
@@ -405,8 +364,11 @@ public class Request {
 		resquest.addHeader("x-requested-with", "XMLHttpRequest");
 		resquest.addHeader("Accept", "application/json, text/javascript, */*; q=0.01");
 		resquest.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-		//resquest.addHeader("Referer", "https://210.76.66.109:7006/gdweb/ggfw/web/pub/mainpage/mainpageldl!wsyw.do");
-		//resquest.addHeader("Referer", "https://210.76.66.109:7006/gdweb/ggfw/web/wsyw/app/ldlzy/gryw/grbtsb/btxx.do?MenuId=170201");
+		resquest.addHeader("Origin", hostConfig.getHostUrl());
+		// resquest.addHeader("Referer",
+		// "https://210.76.66.109:7006/gdweb/ggfw/web/pub/mainpage/mainpageldl!wsyw.do");
+		// resquest.addHeader("Referer",
+		// "https://210.76.66.109:7006/gdweb/ggfw/web/wsyw/app/ldlzy/gryw/grbtsb/btxx.do?MenuId=170201");
 	}
 
 	public void setHeader(HttpUriRequest resquest, HttpClientContext context) {
@@ -416,9 +378,12 @@ public class Request {
 
 		resquest.addHeader("Accept-Language", "zh-CN,zh;q=0.8,ja;q=0.6,en;q=0.4");
 		resquest.addHeader("Cache-Control", "no-cache");
-		
-		//resquest.addHeader("Token", CookieUtil.getCookieValue("Token", context.getCookieStore()));
-		
+		resquest.addHeader("Pragma", "no-cache");
+		resquest.addHeader("Origin", hostConfig.getHostUrl());
+
+		// resquest.addHeader("Token", CookieUtil.getCookieValue("Token",
+		// context.getCookieStore()));
+
 		if (!resquest.containsHeader("Referer") && hostConfig.getReferer() != null) {
 			resquest.addHeader("Referer", hostConfig.getReferer());
 		}
@@ -512,34 +477,20 @@ public class Request {
 		return httpClient;
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
-	public static RequestConfig getRequestConfig() {
-
-		int timeout = 6 * 1000;
-
-		return RequestConfig.custom().setSocketTimeout(timeout).setConnectTimeout(timeout).build();
-	}
-	
 	public void shutdown() {
-		try {
-			executorService.shutdownNow();
-			connManager.shutdown();
-		} catch (Exception e) {
-		}
+		connManager.shutdown();
 	}
-	
+
 	public static void main(String[] args) throws Exception {
-		
-		Request req = new Request(new TicketsHostConfig());
-		String pp = req.get("kyfw.12306.cn", "/otn/login/init", HttpClientContext.create());
+
+		TicketsHostConfig config = new TicketsHostConfig();
+		Request req = new Request(config);
+		String pp = req.get(config.getHostUrl(), "/otn/login/init", HttpClientContext.create());
 		System.out.println(pp);
-//		String pp1 = req.get("kyfw.12306.cn", "/otn/login/init", HttpClientContext.create());
-//		System.out.println(pp1);
-		
-//		req.shutdown();
+		String pp1 = req.get(config.getHostUrl(), "/otn/login/init", HttpClientContext.create());
+		System.out.println(pp1);
+
+		req.shutdown();
 	}
 
 }

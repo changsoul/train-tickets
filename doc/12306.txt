@@ -1,0 +1,19 @@
+
+
+
+keytool -importcert -file /Users/changsoul/Downloads/srca12306/srca.cer -keystore /Users/changsoul/srca12306.jks -alias srca12306
+
+http://blog.csdn.net/tang9140/article/details/42869269
+
+
+http://jinnianshilongnian.iteye.com/blog/2089792
+
+
+https://kyfw.12306.cn/otn/resources/js/newpasscode/captcha_js.js?_=1506688804589   get
+
+https://kyfw.12306.cn/otn/dynamicJs/liocapy  get
+
+https://kyfw.12306.cn/passport/web/auth/uamtk?appid=otn  post
+
+
+Cookie:JSESSIONID=7EE1F3090899F965DBBBA0D42940AB76; _jc_save_fromStation=%u4E09%u6C5F%u5357%2CSWZ; _jc_save_toStation=%u5E7F%u5DDE%2CGZQ; _jc_save_fromDate=2017-02-02; _jc_save_toDate=2017-01-04; _jc_save_wfdc_flag=dc; route=6f50b51faa11b987e576cdb301e545c4; BIGipServerotn=451412234.64545.0000; BIGipServerpassport=904397066.50215.0000

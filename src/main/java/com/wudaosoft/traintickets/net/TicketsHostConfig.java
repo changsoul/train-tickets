@@ -26,10 +26,18 @@ import org.apache.http.HttpHost;
 public class TicketsHostConfig extends HostConfig {
 	
 	private String referer = "https://kyfw.12306.cn/otn/login/init";
+	private HttpHost host;
+	private String hostUrl;
 	
+	public TicketsHostConfig() {
+		super();
+		host = new HttpHost("kyfw.12306.cn", -1, "https");
+		hostUrl = host.toURI();
+	}
+
 	@Override
 	public HttpHost getHost() {
-		return new HttpHost("kyfw.12306.cn", 443);
+		return host;
 	}
 
 	@Override
@@ -45,6 +53,11 @@ public class TicketsHostConfig extends HostConfig {
 	@Override
 	public char[] getCAPassword() {
 		return "123456".toCharArray();
+	}
+
+	@Override
+	public String getHostUrl() {
+		return hostUrl;
 	}
 
 	
