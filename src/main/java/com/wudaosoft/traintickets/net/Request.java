@@ -290,7 +290,6 @@ public class Request {
 	public BufferedImage getImage(final String hostUrl, String urlSuffix, HttpClientContext context)
 			throws Exception {
 		String url = hostUrl + urlSuffix;
-		url = buildReqUrl(url);
 
 		HttpGet httpGet = new HttpGet(url);
 
@@ -379,7 +378,6 @@ public class Request {
 		resquest.addHeader("Accept-Language", "zh-CN,zh;q=0.8,ja;q=0.6,en;q=0.4");
 		resquest.addHeader("Cache-Control", "no-cache");
 		resquest.addHeader("Pragma", "no-cache");
-		resquest.addHeader("Origin", hostConfig.getHostUrl());
 
 		// resquest.addHeader("Token", CookieUtil.getCookieValue("Token",
 		// context.getCookieStore()));

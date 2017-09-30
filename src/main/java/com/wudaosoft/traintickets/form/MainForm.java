@@ -50,13 +50,11 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerDateModel;
 import javax.swing.border.EtchedBorder;
 
-import org.apache.http.client.protocol.HttpClientContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wudaosoft.traintickets.Action;
 import com.wudaosoft.traintickets.model.UserInfo;
-import com.wudaosoft.traintickets.net.Request;
 import com.wudaosoft.traintickets.util.DateUtil;
 import com.wudaosoft.traintickets.util.ExtensionFileFilter;
 
@@ -69,7 +67,7 @@ public class MainForm extends JFrame {
 	
 	private static final Logger log = LoggerFactory.getLogger(MainForm.class);
 
-	private Action action = Action.getInstance();
+	private final Action action = Action.getInstance();
 
 	private JTable loginTable;
 	
@@ -91,15 +89,15 @@ public class MainForm extends JFrame {
 
 	private StringBuffer msgBuffer;
 	
-	private HttpClientContext systemContext;
+	private final UserInfo userInfo;
 	
 	private UserTableModel userModel;
 
 	public MainForm() throws HeadlessException {
 		super();
 		this.msgBuffer = new StringBuffer();
-		this.systemContext = HttpClientContext.create();
-        Request.setLoadBalancingCookie(systemContext);
+		this.userInfo = new UserInfo();
+//        Request.setLoadBalancingCookie(systemContext);
         action.setMainForm(this);
 		initComponents();
 		setTitle("广东省劳动力培训转移就业专项补助资金网上申报系统—批量自动申请器");
@@ -126,8 +124,8 @@ public class MainForm extends JFrame {
 		});
 		setVisible(true);
 		
-		initTimeBar();
-		initSpeedBar();
+//		initTimeBar();
+//		initSpeedBar();
 	}
 
 	/**
@@ -137,14 +135,18 @@ public class MainForm extends JFrame {
 
 		JMenu jm = new JMenu("文件"); // 创建JMenu菜单对象
 		JMenu jmHelp = new JMenu("帮助"); // 创建JMenu菜单对象
+		JMenu jmMy = new JMenu("我的12306"); // 创建JMenu菜单对象
 		JMenuItem mnImportNew = new JMenuItem("导入新用户"); // 菜单项
 		JMenuItem mnImportOld = new JMenuItem("追加新用户");// 菜单项
 		jm.add(mnImportNew); // 将菜单项目添加到菜单
 		jm.add(mnImportOld); // 将菜单项目添加到菜单
 		JMenuItem jmiAbout = new JMenuItem("关于");
 		jmHelp.add(jmiAbout);
+		JMenuItem jmiLogin = new JMenuItem("登录");
+		jmMy.add(jmiLogin);
 		JMenuBar br = new JMenuBar(); // 创建菜单工具栏
 		br.add(jm); // 将菜单增加到菜单工具栏
+		br.add(jmMy);
 		br.add(jmHelp);
 		this.setJMenuBar(br); // 为 窗体设置 菜单工具栏
 		
@@ -161,6 +163,14 @@ public class MainForm extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				mnImportClick(false);
+			}
+		});
+		
+		jmiLogin.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				openCaptchaForm(userInfo);
 			}
 		});
 		   
@@ -297,11 +307,11 @@ public class MainForm extends JFrame {
 	}
 	
 	protected void initTimeBar() {
-		action.getServerTime(timeStatusbar, systemContext);
+		action.getServerTime(timeStatusbar, userInfo.getContext());
 	}
 	
 	protected void initSpeedBar() {	
-		action.setSpeedScheduled(speedStatusbar, systemContext);
+		action.setSpeedScheduled(speedStatusbar, userInfo.getContext());
 	}
 
 	public JTable getLoginTable() {
@@ -325,6 +335,11 @@ public class MainForm extends JFrame {
 		}
 	}
 
+	protected void openCaptchaForm(UserInfo user) {
+		CaptchaForm fmLogin = new CaptchaForm(this, user, true);
+		fmLogin.setVisible(true);
+	}
+	
 	protected void loginClick(MyButton button) {
 		LoginForm fmLogin = new LoginForm(this, button, button.getUserInfo(), true);
 		fmLogin.setVisible(true);

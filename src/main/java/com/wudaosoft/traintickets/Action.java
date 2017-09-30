@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -180,7 +180,7 @@ public class Action {
 	 */
 	public JSONObject captchaCheck(String answer, UserInfo userInfo) throws Exception {
 		
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new LinkedHashMap<String, String>();
 		params.put("answer", answer);
 		params.put("login_site", "E");
 		params.put("rand", "sjrand");
@@ -199,7 +199,7 @@ public class Action {
 	 */
 	public JSONObject login(String username, String password, UserInfo userInfo) throws Exception {
 
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new LinkedHashMap<String, String>();
 		params.put("username", username);
 		params.put("password", password);
 		params.put("appid", ApiCons.APP_ID);
@@ -217,7 +217,7 @@ public class Action {
 		
 		String sessionId = CookieUtil.getCookieValue("JSESSIONIDGDLDWQ", userInfo.getContext().getCookieStore());
 		
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new LinkedHashMap<String, String>();
 		params.put("sessionid", sessionId);
 
 		JSONObject data = request.postAjax(hostConfig.getHostUrl(), DomainConfig.AJAX_LOGOUT, params,
@@ -233,7 +233,7 @@ public class Action {
 	 * 
 	 * @param userInfo
 	 */
-	public void initUser(MyButton button, UserInfo userInfo) {
+	public void initUser(final MyButton button, final UserInfo userInfo) {
 
 		executorService.execute(new Runnable() {
 
@@ -319,25 +319,13 @@ public class Action {
 	}
 
 	/**
-	 * 获取登录验证码
-	 * 
-	 * @param userInfo
-	 * @return
-	 * @throws Exception
-	 */
-	public Future<BufferedImage> getCheckImage(UserInfo userInfo) throws Exception {
-
-		return executorService.submit(new CheckImageCallable(userInfo));
-	}
-
-	/**
 	 * 获取服务器时间
 	 * 
 	 * @param timeStatusbar
 	 * @param systemContext
 	 * @param systemContext
 	 */
-	public void getServerTime(JLabel timeStatusbar, HttpClientContext systemContext) {
+	public void getServerTime(final JLabel timeStatusbar, final HttpClientContext systemContext) {
 		executorService.execute(new Runnable() {
 
 			@Override
@@ -376,7 +364,7 @@ public class Action {
 	 * 
 	 * @param timeStatusbar
 	 */
-	protected void setTimer(JLabel timeStatusbar) {
+	protected void setTimer(final JLabel timeStatusbar) {
 
 		timerExecutorService.scheduleAtFixedRate(new Runnable() {
 			public void run() {
@@ -391,7 +379,7 @@ public class Action {
 	 * 
 	 * @param userInfo
 	 */
-	public void setHeartbeatScheduled(UserInfo userInfo) {
+	public void setHeartbeatScheduled(final UserInfo userInfo) {
 
 		scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
 			public void run() {
@@ -413,7 +401,7 @@ public class Action {
 	 * @param speedStatusbar
 	 * @param systemContext
 	 */
-	public void setSpeedScheduled(JLabel speedStatusbar, HttpClientContext systemContext) {
+	public void setSpeedScheduled(final JLabel speedStatusbar, final HttpClientContext systemContext) {
 
 		scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
 			public void run() {
@@ -488,7 +476,7 @@ public class Action {
 	 
 
 	/*public JSONObject getApplyRecord(UserInfo userInfo) throws Exception {
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new LinkedHashMap<String, String>();
 		params.put("confid", "ldlzy_gryw_grbtsb_bt_q_l");
 		params.put("dynDictWhereCls", "null");
 		params.put("dsId", "");
@@ -569,7 +557,7 @@ public class Action {
 		
 		Document doc = Jsoup.parse(html);
 		Elements elements = doc.select("form[name='gtForm'] input, form[name='gtForm'] select");
-		Map<String, Object> data = new HashMap<String, Object>();
+		Map<String, Object> data = new LinkedHashMap<String, Object>();
 		
 //		elements.forEach(e -> {
 //			
@@ -617,7 +605,7 @@ public class Action {
 	 * @throws Exception
 	 */
 	public boolean checkIfHasSubmitted(String id, UserInfo userInfo) throws Exception {
-		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> params = new LinkedHashMap<String, Object>();
 		params.put("BCC859", id);
 
 		String rs = doService("btxxService.checkIfHasSubmitted", params, userInfo);
@@ -658,7 +646,7 @@ public class Action {
 			params.put("BCC859", obj.getString("YWLSH"));
 			params.put("readOnly", "true");
 			
-			Map<String, String> pars = new HashMap<String, String>();
+			Map<String, String> pars = new LinkedHashMap<String, String>();
 			
 			//params.entrySet().forEach(e -> pars.put(e.getKey(), e.getValue().toString()));
 			
@@ -675,7 +663,7 @@ public class Action {
 	public Map<String, Object> getZsxx(UserInfo userInfo) throws Exception {
 		
 		Map<String, Object> data = userInfo.getApplyData();
-		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> params = new LinkedHashMap<String, Object>();
 		
 		params.put("BHE034", data.get("BHE034"));// 证书类别
 		params.put("CCE029", data.get("CCE029"));// 证书级别
@@ -739,7 +727,7 @@ public class Action {
 
 		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 
-		Map<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
 
 		map.put("serviceId", acts[0]);
 		map.put("method", acts[1]);
@@ -747,7 +735,7 @@ public class Action {
 
 		list.add(map);
 
-		Map<String, String> tmpParams = new HashMap<String, String>();
+		Map<String, String> tmpParams = new LinkedHashMap<String, String>();
 		tmpParams.put("parameters", JSON.toJSONString(list));
 		tmpParams.put("method", "{}");
 		tmpParams.put("shareArguments", "{}");

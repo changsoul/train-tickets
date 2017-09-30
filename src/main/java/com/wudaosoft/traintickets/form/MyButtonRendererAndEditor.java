@@ -43,7 +43,7 @@ public class MyButtonRendererAndEditor extends DefaultCellEditor implements Tabl
 	public MyButtonRendererAndEditor(String text) {
 		super(new JTextField());
 		setClickCountToStart(1);
-		this.buttons = new HashMap<>(30);
+		this.buttons = new HashMap<String, MyButton>(30);
 		this.text = text;
 	}
 

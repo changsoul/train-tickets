@@ -32,7 +32,7 @@ public class UserTableModel extends AbstractTableModel {
 	private List<UserInfo> users;
 
 	public UserTableModel() {
-		this.users = new LinkedList<>();
+		this.users = new LinkedList<UserInfo>();
 	}
 
 	/**

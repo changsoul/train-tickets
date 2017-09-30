@@ -22,8 +22,6 @@ import java.util.concurrent.ScheduledFuture;
 
 import org.apache.http.client.protocol.HttpClientContext;
 
-import com.wudaosoft.traintickets.net.Request;
-
 /**
  * @author Changsoul Wu
  * 
@@ -67,10 +65,10 @@ public class UserInfo {
 		this.isLogin = false;
 		this.isFinish = false;
 		this.applyStatus = ApplyStatus.unsubmit;
-		this.futures = new ArrayList<>();
+		this.futures = new ArrayList<ScheduledFuture<?>>();
 		cancelAllScheduled();
 		this.context = HttpClientContext.create();
-		Request.setLoadBalancingCookie(this.context);
+//		Request.setLoadBalancingCookie(this.context);
 	}
 
 	public String getName() {

@@ -64,21 +64,21 @@ public class ApplyRunnable implements Runnable {
 				
 				applyData = action.getZsxx(userInfo);
 				
-				int syzbs = (int)applyData.get("SYZBS");
-				boolean isLackOfIndicators = (boolean)applyData.get("isLackOfIndicators");
-				
-				if(isLackOfIndicators) {
-					action.getMainForm().writeMsg("提交失败，缺乏指标", userInfo);
-					return;
-				}
-				
-				if(syzbs <= 0) {
-					action.getMainForm().writeMsg("提交失败，本月剩余补贴指标为0", userInfo);
-					return;
-				}
-				
-				applyData.put("SYZBS", syzbs + "");
-				applyData.put("isLackOfIndicators", isLackOfIndicators ? "true" : "false");
+//				int syzbs = (int)applyData.get("SYZBS");
+//				boolean isLackOfIndicators = (boolean)applyData.get("isLackOfIndicators");
+//				
+//				if(isLackOfIndicators) {
+//					action.getMainForm().writeMsg("提交失败，缺乏指标", userInfo);
+//					return;
+//				}
+//				
+//				if(syzbs <= 0) {
+//					action.getMainForm().writeMsg("提交失败，本月剩余补贴指标为0", userInfo);
+//					return;
+//				}
+//				
+//				applyData.put("SYZBS", syzbs + "");
+//				applyData.put("isLackOfIndicators", isLackOfIndicators ? "true" : "false");
 				
 				isSubmit = action.submitBtxx(applyData, userInfo);
 			}
