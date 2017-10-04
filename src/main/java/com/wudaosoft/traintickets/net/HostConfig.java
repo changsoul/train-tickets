@@ -5,7 +5,7 @@
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  * 
- *        https://www.apache.org/licenses/LICENSE-2.0
+ *        http://www.apache.org/licenses/LICENSE-2.0
  * 
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,52 +16,30 @@
 package com.wudaosoft.traintickets.net;
 
 import java.net.URL;
-import java.util.Arrays;
 
 import org.apache.http.HttpHost;
-import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.RequestConfig;
 
 /**
- * @author Changsoul Wu
- * 
+ * @author changsoul.wu
+ *
  */
-public abstract class HostConfig {
+public interface HostConfig {
 
-	private String userAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)";
-	private RequestConfig defaultRequestConfig;
-	
-	public HostConfig() {
-		defaultRequestConfig = org.apache.http.client.config.RequestConfig.custom()
-				.setExpectContinueEnabled(false)
-				// .setStaleConnectionCheckEnabled(true)
-				.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
-				.setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC))
-				.setConnectionRequestTimeout(500).setConnectTimeout(5000).setSocketTimeout(6000)
-				.build();
-	}
+	String getUserAgent();
 
-	public String getUserAgent() {
-		return userAgent;
-	}
+	String getReferer();
 
-	public String getReferer() {
-		return null;
-	}
+	HttpHost getHost();
 
-	abstract public HttpHost getHost();
-	
-	abstract public String getHostUrl();
+	String getHostUrl();
 
-	public RequestConfig getRequestConfig() {
-		return defaultRequestConfig;
-	}
+	RequestConfig getRequestConfig();
 
-	public URL getCA() {
-		return null;
-	}
-	
-	public char[] getCAPassword() {
-		return "nopassword".toCharArray();
-	}
+	URL getCA();
+
+	char[] getCAPassword();
+
+	boolean isMulticlient();
+
 }

@@ -27,12 +27,20 @@ public class ApiCons {
 	
 	public static final String LOGIN_PAGE = "/otn/login/init";
 	
-	public static final String AJAX_LOGIN = "/passport/web/login";
+	public static final String LEFT_TICKET_PAGE = "/otn/leftTicket/init";
 	
-	public static final String AJAX_LOGOUT = "/gdweb/ajaxlogin!logout.do";
+	public static final String LEFT_TICKET_LOG_AJAX = "/otn/leftTicket/log";
 	
-	public static final String CAPTCHA_IMAGE = "/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&0.094367990572206";
+	public static final String LEFT_TICKET_QUERYX_AJAX = "/otn/leftTicket/queryX";
 	
-	public static final String AJAX_CAPTCHA_CHECK = "/passport/captcha/captcha-check";
+	public static final String LOGIN_AJAX = "/passport/web/login";
+	
+	public static final String AUTH_UAMTK_AJAX = "/passport/web/auth/uamtk";
+	
+	public static final String LOGOUT_AJAX = "/gdweb/ajaxlogin!logout.do";
+	
+	public static final String CAPTCHA_IMAGE = "/passport/captcha/captcha-image";
+	
+	public static final String CAPTCHA_CHECK_AJAX = "/passport/captcha/captcha-check";
 	
 }

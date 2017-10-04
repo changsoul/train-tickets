@@ -89,23 +89,20 @@ public class MainForm extends JFrame {
 
 	private StringBuffer msgBuffer;
 	
-	private final UserInfo userInfo;
-	
 	private UserTableModel userModel;
 
 	public MainForm() throws HeadlessException {
 		super();
 		this.msgBuffer = new StringBuffer();
-		this.userInfo = new UserInfo();
-//        Request.setLoadBalancingCookie(systemContext);
         action.setMainForm(this);
 		initComponents();
-		setTitle("广东省劳动力培训转移就业专项补助资金网上申报系统—批量自动申请器");
-		setSize(1000, 650);
-		setResizable(false);
+		setTitle("购票助手");
+		//setSize(1000, 650);
+		//setResizable(false);
 		ImageIcon logo = new ImageIcon(this.getClass().getResource("/Icon-60@2x.png"));
 		setIconImage(logo.getImage());
-		setLocationRelativeTo(getOwner()); // 居中显示
+//		setLocationRelativeTo(getOwner()); // 居中显示
+		setExtendedState(JFrame.MAXIMIZED_BOTH); 
 //		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -122,10 +119,16 @@ public class MainForm extends JFrame {
 			}
 
 		});
-		setVisible(true);
 		
-//		initTimeBar();
-//		initSpeedBar();
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowOpened(WindowEvent e) {
+				super.windowOpened(e);
+				initNetwork();
+			}
+		});
+		
+		setVisible(true);
 	}
 
 	/**
@@ -170,7 +173,7 @@ public class MainForm extends JFrame {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				openCaptchaForm(userInfo);
+				openCaptchaForm(action.getDefaultUser());
 			}
 		});
 		   
@@ -208,7 +211,7 @@ public class MainForm extends JFrame {
 			@Override
 			public void invoke(ActionEvent e) {
 				MyButton button = (MyButton) e.getSource();
-				loginClick(button);
+				//loginClick(button);
 			}
 		};
 
@@ -306,12 +309,17 @@ public class MainForm extends JFrame {
 		splitPane.setRightComponent(msgTextPane);
 	}
 	
+	public void initNetwork() {
+		initTimeBar();
+		initSpeedBar();
+	}
+	
 	protected void initTimeBar() {
-		action.getServerTime(timeStatusbar, userInfo.getContext());
+		action.getServerTime(timeStatusbar, action.getDefaultUser().getContext());
 	}
 	
 	protected void initSpeedBar() {	
-		action.setSpeedScheduled(speedStatusbar, userInfo.getContext());
+		action.setSpeedScheduled(speedStatusbar, action.getDefaultUser());
 	}
 
 	public JTable getLoginTable() {
@@ -340,8 +348,8 @@ public class MainForm extends JFrame {
 		fmLogin.setVisible(true);
 	}
 	
-	protected void loginClick(MyButton button) {
-		LoginForm fmLogin = new LoginForm(this, button, button.getUserInfo(), true);
+	public void showLoginForm() {
+		LoginForm fmLogin = new LoginForm(this, action.getDefaultUser(), true);
 		fmLogin.setVisible(true);
 	}
 	
@@ -353,7 +361,7 @@ public class MainForm extends JFrame {
 				return;
 			}
 			
-			action.grabSingleBuzu(button.getUserInfo());
+			action.applyOnece(button.getUserInfo());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

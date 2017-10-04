@@ -18,10 +18,10 @@ package com.wudaosoft.traintickets.net;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 
 /** 
@@ -53,16 +53,17 @@ public class CookieUtil {
 	
 	/**
 	 * 设置负载均衡服务器，选择时间最早的那台。
+	 * 
 	 * @param context
 	 */
-	public static void setLoadBalancingCookie(HttpClientContext context) {
-		final BasicClientCookie cookie = new BasicClientCookie("Cookie1", DomainConfig.SERVER_ID);
+	public static void setLoadBalancingCookie(HttpHost host, HttpClientContext context) {
+		final BasicClientCookie cookie = new BasicClientCookie("BIGipServerotn", "501743882.64545.0000");
+        cookie.setDomain(host.getHostName());
         cookie.setPath("/");
-        cookie.setDomain(DomainConfig.DOMAIN.split(":")[0]);
         
 		CookieStore cookieStore = context.getCookieStore();
 		if(cookieStore == null)
-			cookieStore = new BasicCookieStore();
+			cookieStore = new Rails12306CookieStore();
 		
 		cookieStore.addCookie(cookie);
 		context.setCookieStore(cookieStore);

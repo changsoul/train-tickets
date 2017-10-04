@@ -17,48 +17,55 @@ package com.wudaosoft.traintickets.net;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.imageio.ImageIO;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 
 import org.apache.http.Consts;
 import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeaderElementIterator;
@@ -66,9 +73,13 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContexts;
+import org.apache.http.util.Args;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONObject;
+import com.wudaosoft.traintickets.cons.ApiCons;
 
 /**
  * 保存上下文的12306网络请求工具，可作模拟IE浏览器请求
@@ -79,39 +90,97 @@ import com.alibaba.fastjson.JSONObject;
  * 
  */
 public class Request {
+	
+	private static final Logger log = LoggerFactory.getLogger(Request.class);
 
 	private HostConfig hostConfig;
 	private CloseableHttpClient httpClient;
+	private SSLContext sslcontext;
+	private Class<? extends CookieStore> defaultCookieStoreClass;
 	private PoolingHttpClientConnectionManager connManager;
+	private ConnectionKeepAliveStrategy myKeepAliveStrategy;
+	private HttpRequestRetryHandler retryHandler;
+	private HttpRequestInterceptor requestInterceptor;
 
-	public Request(HostConfig hc) {
-		this.hostConfig = hc;
+	private Request() {
+	}
+
+	public static Request custom() {
+		return new Request();
+	}
+
+	public static Request createDefault(HostConfig hostConfig) {
+		return new Request().setHostConfig(hostConfig).build();
+	}
+
+	public static Request createDefaultWithNoRetry(HostConfig hostConfig) {
+		HttpRequestRetryHandler retryHandler1 = new DefaultHttpRequestRetryHandler(0, false);
+		return new Request().setHostConfig(hostConfig).setRetryHandler(retryHandler1).build();
+	}
+
+	public Request setHostConfig(HostConfig hostConfig) {
+		this.hostConfig = hostConfig;
+		return this;
+	}
+
+	public Request setSslcontext(SSLContext sslcontext) {
+		this.sslcontext = sslcontext;
+		return this;
+	}
+
+	public Request setDefaultCookieStoreClass(Class<? extends CookieStore> defaultCookieStoreClass) {
+		this.defaultCookieStoreClass = defaultCookieStoreClass;
+		return this;
+	}
+
+	public Request setRetryHandler(HttpRequestRetryHandler myRetryHandler) {
+		this.retryHandler = myRetryHandler;
+		return this;
+	}
+
+	public Request setRequestInterceptor(HttpRequestInterceptor requestInterceptor) {
+		this.requestInterceptor = requestInterceptor;
+		return this;
+	}
+
+	public Request build() {
 		try {
 			init();
+			return this;
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (e instanceof RuntimeException)
+				throw (RuntimeException) e;
+			throw new RuntimeException(e);
 		}
 	}
 
 	protected void init() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException,
 			CertificateException, IOException {
+		
+		Args.notNull(hostConfig, "Host config");
 
 		SSLConnectionSocketFactory sslConnectionSocketFactory = null;
 
-		if (hostConfig.getCA() != null) {
-			// Trust root CA and all self-signed certs
-			SSLContext sslcontext = SSLContexts.custom()
-					.loadTrustMaterial(hostConfig.getCA(), hostConfig.getCAPassword(), new TrustSelfSignedStrategy())
-					.build();
+		if (sslcontext == null) {
 
-			// Allow TLSv1 protocol only
+			if (hostConfig.getCA() != null) {
+				// Trust root CA and all self-signed certs
+				SSLContext sslcontext1 = SSLContexts.custom().loadTrustMaterial(hostConfig.getCA(),
+						hostConfig.getCAPassword(), new TrustSelfSignedStrategy()).build();
+
+				// Allow TLSv1 protocol only
+				sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslcontext1, new String[] { "TLSv1" }, null,
+						SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+			} else {
+				sslConnectionSocketFactory = SSLConnectionSocketFactory.getSocketFactory();
+			}
+		} else {
+
 			sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslcontext, new String[] { "TLSv1" }, null,
 					SSLConnectionSocketFactory.getDefaultHostnameVerifier());
-		} else {
-			sslConnectionSocketFactory = SSLConnectionSocketFactory.getSocketFactory();
 		}
 
-		ConnectionKeepAliveStrategy myKeepAliveStrategy = new ConnectionKeepAliveStrategy() {
+		myKeepAliveStrategy = new ConnectionKeepAliveStrategy() {
 
 			public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
 				// Honor 'keep-alive' header
@@ -143,43 +212,41 @@ public class Request {
 
 		};
 
-		/*HttpRequestRetryHandler myRetryHandler = new HttpRequestRetryHandler() {
+		if (retryHandler == null) {
+			retryHandler = new HttpRequestRetryHandler() {
 
-			public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
-				if (executionCount >= 3) {
-					// 如果已经重试了3次，就放弃
+				public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+					if (executionCount >= 3) {
+						// Do not retry if over max retry count
+						return false;
+					}
+					if (exception instanceof InterruptedIOException) {
+						// Timeout
+						return false;
+					}
+					if (exception instanceof UnknownHostException) {
+						// Unknown host
+						return false;
+					}
+					if (exception instanceof ConnectTimeoutException) {
+						// Connection refused
+						return false;
+					}
+					if (exception instanceof SSLException) {
+						// SSL handshake exception
+						return false;
+					}
+					HttpClientContext clientContext = HttpClientContext.adapt(context);
+					HttpRequest request = clientContext.getRequest();
+					boolean idempotent = !(request instanceof HttpEntityEnclosingRequest);
+					if (idempotent) {
+						// Retry if the request is considered idempotent
+						return true;
+					}
 					return false;
 				}
-				if (exception instanceof InterruptedIOException) {
-					// 超时
-					return false;
-				}
-				if (exception instanceof UnknownHostException) {
-					// 目标服务器不可达
-					return false;
-				}
-				if (exception instanceof ConnectTimeoutException) {
-					// 连接被拒绝
-					return false;
-				}
-				if (exception instanceof SSLException) {
-					// ssl握手异常
-					return false;
-				}
-				HttpClientContext clientContext = HttpClientContext.adapt(context);
-				HttpRequest request = clientContext.getRequest();
-				boolean idempotent = !(request instanceof HttpEntityEnclosingRequest);
-				if (idempotent) {
-					// 如果请求是幂等的，就再次尝试
-					return true;
-				}
-				return false;
-			}
-
-		};*/
-		
-		//不重试
-		HttpRequestRetryHandler myRetryHandler = new DefaultHttpRequestRetryHandler(0, false);
+			};
+		}
 
 		connManager = new PoolingHttpClientConnectionManager(RegistryBuilder.<ConnectionSocketFactory>create()
 				.register("http", PlainConnectionSocketFactory.getSocketFactory())
@@ -187,7 +254,8 @@ public class Request {
 
 		connManager.setMaxTotal(400);
 		connManager.setDefaultMaxPerRoute(50);
-		connManager.setMaxPerRoute(new HttpRoute(hostConfig.getHost(), null, !HttpHost.DEFAULT_SCHEME_NAME.equals(hostConfig.getHost().getSchemeName())), 300);
+		connManager.setMaxPerRoute(new HttpRoute(hostConfig.getHost(), null,
+				!HttpHost.DEFAULT_SCHEME_NAME.equals(hostConfig.getHost().getSchemeName())), 300);
 		// connManager.setValidateAfterInactivity(2000);
 
 		// Create socket configuration
@@ -199,10 +267,11 @@ public class Request {
 				.setUnmappableInputAction(CodingErrorAction.IGNORE).setCharset(Consts.UTF_8).build();
 		connManager.setDefaultConnectionConfig(connectionConfig);
 
-		httpClient = HttpClients.custom().setConnectionManager(connManager).setKeepAliveStrategy(myKeepAliveStrategy)
-				.setDefaultRequestConfig(hostConfig.getRequestConfig()).setRetryHandler(myRetryHandler).build();
-		
 		new IdleConnectionMonitorThread(connManager).start();
+
+		if (!hostConfig.isMulticlient()) {
+			httpClient = create();
+		}
 	}
 
 	public String get(final String hostUrl, String urlSuffix, HttpClientContext context) throws Exception {
@@ -217,9 +286,13 @@ public class Request {
 
 		HttpGet httpGet = new HttpGet(url);
 
-		setHeader(httpGet, context);
-
-		return getHttpClient().execute(httpGet, new StringResponseHandler(), context);
+		String rs = getHttpClient().execute(httpGet, new StringResponseHandler(), context);
+		
+		if(log.isDebugEnabled()) {
+			log.debug(String.format("Get data from path:\"%s\". result: %s", urlSuffix, rs));
+		}
+		
+		return rs;
 	}
 
 	public JSONObject getAjax(final String hostUrl, String urlSuffix, HttpClientContext context) throws Exception {
@@ -227,9 +300,6 @@ public class Request {
 		return getAjax(hostUrl, urlSuffix, null, context);
 	}
 
-	/**
-	 * Ajax get请求，只请求一次，不做重试
-	 */
 	public JSONObject getAjax(final String hostUrl, String urlSuffix, Map<String, String> params,
 			HttpClientContext context) throws Exception {
 
@@ -239,14 +309,16 @@ public class Request {
 		HttpGet httpGet = new HttpGet(url);
 
 		setAjaxHeader(httpGet, context);
-		setHeader(httpGet, context);
 
-		return getHttpClient().execute(httpGet, new JsonResponseHandler(), context);
+		JSONObject rs = getHttpClient().execute(httpGet, new JsonResponseHandler(), context);
+		
+		if(log.isDebugEnabled()) {
+			log.debug(String.format("Get ajax data from path:\"%s\". result: %s", urlSuffix, rs));
+		}
+		
+		return rs;
 	}
 
-	/**
-	 * post请求，只请求一次，不做重试
-	 */
 	public String post(final String hostUrl, String urlSuffix, Map<String, String> params, HttpClientContext context)
 			throws Exception {
 
@@ -254,20 +326,22 @@ public class Request {
 		url = buildReqUrl(url);
 
 		HttpPost httpPost = new HttpPost(url);
-
-		setHeader(httpPost, context);
+		setAjaxHeader(httpPost, context);
 
 		if (params != null) {
 			UrlEncodedFormEntity postEntity = buildUrlEncodedFormEntity(params);
 			httpPost.setEntity(postEntity);
 		}
 
-		return getHttpClient().execute(httpPost, new StringResponseHandler(), context);
+		String rs = getHttpClient().execute(httpPost, new StringResponseHandler(), context);
+		
+		if(log.isDebugEnabled()) {
+			log.debug(String.format("Post data to path:\"%s\". result: %s", urlSuffix, rs));
+		}
+		
+		return rs;
 	}
 
-	/**
-	 * Ajax post请求，只请求一次，不做重试
-	 */
 	public JSONObject postAjax(final String hostUrl, String urlSuffix, Map<String, String> params,
 			HttpClientContext context) throws Exception {
 
@@ -277,26 +351,30 @@ public class Request {
 		HttpPost httpPost = new HttpPost(url);
 
 		setAjaxHeader(httpPost, context);
-		setHeader(httpPost, context);
 
 		if (params != null) {
 			UrlEncodedFormEntity postEntity = buildUrlEncodedFormEntity(params);
 			httpPost.setEntity(postEntity);
 		}
 
-		return getHttpClient().execute(httpPost, new JsonResponseHandler(), context);
+		JSONObject rs = getHttpClient().execute(httpPost, new JsonResponseHandler(), context);
+		
+		if(log.isDebugEnabled()) {
+			log.debug(String.format("Post ajax data to path:\"%s\". result: %s", urlSuffix, rs));
+		}
+		
+		return rs;
 	}
 
-	public BufferedImage getImage(final String hostUrl, String urlSuffix, HttpClientContext context)
-			throws Exception {
+	public BufferedImage getImage(final String hostUrl, String urlSuffix, HttpClientContext context) throws Exception {
+
 		String url = hostUrl + urlSuffix;
 
 		HttpGet httpGet = new HttpGet(url);
 
 		httpGet.addHeader("Accept", "image/webp,image/*,*/*;q=0.8");
-		setHeader(httpGet, context);
 
-		HttpResponse response = getHttpClient().execute(httpGet, context);
+		CloseableHttpResponse response = getHttpClient().execute(httpGet, context);
 		int status = response.getStatusLine().getStatusCode();
 		HttpEntity entity = response.getEntity();
 
@@ -308,84 +386,89 @@ public class Request {
 			return buffImg;
 		} finally {
 			EntityUtils.consumeQuietly(entity);
-			httpGet.releaseConnection();
+			try {
+				response.close();
+			} catch (IOException e) {
+			}
 		}
 	}
 
-	public void sendHeartbeat(final String hostUrl, String urlSuffix, HttpClientContext context) throws Exception {
-		String url = hostUrl + urlSuffix + "?d=" + new Date().toString();
-		url = buildReqUrl(url);
-		HttpGet httpGet = new HttpGet(url);
-		httpGet.addHeader("Accept", "image/webp,image/*,*/*;q=0.8");
-		setHeader(httpGet, context);
-
-		HttpClient httpclient = getHttpClient();
-		httpclient.execute(httpGet, context);
-
-		httpGet.releaseConnection();
-	}
-
-	public String getServerTime(final String hostUrl, String urlSuffix, HttpClientContext systemContext)
+	public String getServerTime(final String hostUrl, String urlSuffix, HttpClientContext context)
 			throws Exception {
 		String url = hostUrl + urlSuffix;
 
 		HttpGet httpGet = new HttpGet(url);
-		setHeader(httpGet, systemContext);
 
-		HttpClient httpclient = getHttpClient();
-		HttpResponse response = httpclient.execute(httpGet, systemContext);
+		CloseableHttpResponse response = null;
+		try {
+			response = getHttpClient().execute(httpGet, context);
 
-		String date = response.getHeaders("Date")[0].getValue();
-		httpGet.releaseConnection();
-		return date;
+			String date = response.getHeaders("Date")[0].getValue();
+			
+			return date;
+		} finally {
+			try {
+				response.close();
+			} catch (IOException e) {
+			}
+		}
 	}
 
-	public long testNetworkDaly(final String hostUrl, String urlSuffix, HttpClientContext systemContext)
+	public long testNetworkDalyByGet(final String hostUrl, String urlSuffix, HttpClientContext context)
 			throws Exception {
-		String url = hostUrl + urlSuffix + "?_r=" + UUID.randomUUID().toString();
-
+		String url = hostUrl + urlSuffix;
+		long daly = 0;
+		
 		HttpGet httpGet = new HttpGet(url);
-		setHeader(httpGet, systemContext);
-
-		HttpClient httpclient = getHttpClient();
-
-		long beginTimemillis = System.currentTimeMillis();
-
-		httpclient.execute(httpGet, systemContext);
-
-		long endTimemillis = System.currentTimeMillis();
-
-		httpGet.releaseConnection();
-		return endTimemillis - beginTimemillis;
+		
+		CloseableHttpResponse response = null;
+		try {
+			long beginTimemillis = System.currentTimeMillis();
+			response = getHttpClient().execute(httpGet, context);
+			daly = System.currentTimeMillis() - beginTimemillis;
+			httpGet.releaseConnection();
+		} finally {
+			try {
+				response.close();
+			} catch (IOException e) {
+			}
+		}
+		
+		return daly;
 	}
 
-	public void setAjaxHeader(HttpUriRequest resquest, HttpClientContext context) {
-		resquest.addHeader("x-requested-with", "XMLHttpRequest");
-		resquest.addHeader("Accept", "application/json, text/javascript, */*; q=0.01");
-		resquest.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-		resquest.addHeader("Origin", hostConfig.getHostUrl());
-		// resquest.addHeader("Referer",
-		// "https://210.76.66.109:7006/gdweb/ggfw/web/pub/mainpage/mainpageldl!wsyw.do");
-		// resquest.addHeader("Referer",
-		// "https://210.76.66.109:7006/gdweb/ggfw/web/wsyw/app/ldlzy/gryw/grbtsb/btxx.do?MenuId=170201");
+	public long testNetworkDalyByPostAjax(final String hostUrl, String urlSuffix, Map<String, String> params,
+			HttpClientContext context) throws Exception {
+		String url = hostUrl + urlSuffix;
+
+		HttpPost httpPost = new HttpPost(url);
+
+		setAjaxHeader(httpPost, context);
+
+		if (params != null) {
+			UrlEncodedFormEntity postEntity = buildUrlEncodedFormEntity(params);
+			httpPost.setEntity(postEntity);
+		}
+
+		long daly = 0;
+		CloseableHttpResponse response = null;
+		try {
+			long beginTimemillis = System.currentTimeMillis();
+			response = getHttpClient().execute(httpPost, context);
+			daly = System.currentTimeMillis() - beginTimemillis;
+			EntityUtils.consumeQuietly(response.getEntity());
+		} finally {
+			try {
+				response.close();
+			} catch (IOException e) {
+			}
+		}
+		
+		return daly;
 	}
 
-	public void setHeader(HttpUriRequest resquest, HttpClientContext context) {
-		if (!resquest.containsHeader("Accept")) {
-			resquest.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-		}
-
-		resquest.addHeader("Accept-Language", "zh-CN,zh;q=0.8,ja;q=0.6,en;q=0.4");
-		resquest.addHeader("Cache-Control", "no-cache");
-		resquest.addHeader("Pragma", "no-cache");
-
-		// resquest.addHeader("Token", CookieUtil.getCookieValue("Token",
-		// context.getCookieStore()));
-
-		if (!resquest.containsHeader("Referer") && hostConfig.getReferer() != null) {
-			resquest.addHeader("Referer", hostConfig.getReferer());
-		}
-		resquest.addHeader("User-Agent", hostConfig.getUserAgent());
+	public void setAjaxHeader(HttpRequest resquest, HttpClientContext context) {
+		resquest.addHeader("X-Requested-With", "XMLHttpRequest");
 	}
 
 	/**
@@ -472,6 +555,36 @@ public class Request {
 	 * @return
 	 */
 	public CloseableHttpClient getHttpClient() {
+
+		if (!hostConfig.isMulticlient()) {
+			return httpClient;
+		}
+
+		return create();
+	}
+
+	public CloseableHttpClient create() {
+		
+		CookieStore cookieStore = null;
+		
+		try {
+			if (defaultCookieStoreClass != null)
+				cookieStore = defaultCookieStoreClass.newInstance();
+		} catch (InstantiationException e) {
+		} catch (IllegalAccessException e) {
+		}
+
+		HttpClientBuilder builder = HttpClients.custom().setConnectionManager(connManager)
+				.setKeepAliveStrategy(myKeepAliveStrategy).setDefaultRequestConfig(hostConfig.getRequestConfig())
+				.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE)
+				.setRetryHandler(retryHandler).setDefaultCookieStore(cookieStore);
+
+		if (requestInterceptor != null) {
+			builder.addInterceptorLast(requestInterceptor);
+		}
+
+		CloseableHttpClient httpClient = builder.build();
+
 		return httpClient;
 	}
 
@@ -481,12 +594,26 @@ public class Request {
 
 	public static void main(String[] args) throws Exception {
 
-		TicketsHostConfig config = new TicketsHostConfig();
-		Request req = new Request(config);
+		// HttpClientContext context = HttpClientContext.create();
+
+		HostConfig config = new Rails12306HostConfig();
+		HttpRequestRetryHandler retryHandler = new DefaultHttpRequestRetryHandler(0, false);
+		HttpRequestInterceptor requestInterceptor = new Rails12306IEHeadersInterceptor(config);
+		Request req = Request.custom().setHostConfig(config).setDefaultCookieStoreClass(Rails12306CookieStore.class)
+				.setRetryHandler(retryHandler).setRequestInterceptor(requestInterceptor).build();
+
 		String pp = req.get(config.getHostUrl(), "/otn/login/init", HttpClientContext.create());
 		System.out.println(pp);
-		String pp1 = req.get(config.getHostUrl(), "/otn/login/init", HttpClientContext.create());
-		System.out.println(pp1);
+		// String pp1 = req.post(config.getHostUrl(), "/otn/login/init", null,
+		// HttpClientContext.create());
+		// System.out.println(pp1);
+
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("appid", ApiCons.APP_ID);
+
+		long pp2 = req.testNetworkDalyByPostAjax(config.getHostUrl(), "/passport/web/auth/uamtk", params,
+				HttpClientContext.create());
+		System.out.println(pp2);
 
 		req.shutdown();
 	}

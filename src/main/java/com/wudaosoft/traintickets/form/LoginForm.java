@@ -26,12 +26,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import org.slf4j.Logger;
@@ -52,31 +52,53 @@ public class LoginForm extends JDialog {
 
 	private boolean loning = false;
 
-	private UserInfo user;
-
-	private MyButton senderButton;
+	private final UserInfo user;
 
 	private Action action = Action.getInstance();
 
-	private JLabel checkCodelabel;
-	private JTextField codeText;
+	private JTextField txtAccount;
+	
+	private JPasswordField txtPassword;
+	
+	private CaptchaView captchaView;
 
-	public LoginForm(Frame owner, MyButton senderButton, UserInfo user, boolean modal) throws HeadlessException {
+	public LoginForm(Frame owner, final UserInfo user, boolean modal) throws HeadlessException {
 		super(owner, modal);
-		this.senderButton = senderButton;
 		this.user = user;
 
 		initComponents();
 		setTitle("用户登录");
-		setSize(400, 320);
+		setSize(414, 410);
 		setResizable(false);
 		setLocationRelativeTo(getOwner()); // 居中显示
 //		setAlwaysOnTop(true);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		
+		addWindowListener(new WindowAdapter() {
+
+			@Override
+			public void windowClosing(WindowEvent e) {
+				super.windowClosing(e);
+
+		        if(!user.getIsLogin()){
+		        	action.shoutdownThreadPool();
+		        	System.exit(0);
+		        } else {
+		        	dispose();
+		        }
+			}
+
+		});
+		
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowOpened(WindowEvent e) {
 				super.windowOpened(e);
+				try {
+					action.getLoginPage(user.getContext());
+				} catch (Exception e1) {
+					log.error(e1.getMessage(), e1);
+				}
 				refeshCheckImage();
 			}
 		});
@@ -86,7 +108,7 @@ public class LoginForm extends JDialog {
 
 	private void refeshCheckImage() {
 		try {
-			checkCodelabel.setIcon(new ImageIcon(action.getCaptchaImage(user)));
+			captchaView.setCaptchaImage(action.getCaptchaImage(user));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -100,57 +122,95 @@ public class LoginForm extends JDialog {
 		JPanel panel = new JPanel();
 		panel.setLayout(null);
 
-		JLabel titleLabel = new JLabel(user.getName() + "(" + user.getLoginId() + ")", JLabel.CENTER);
-		titleLabel.setBounds(0, 18, 350, 25);
+		String title = "登录";
+		
+		if(user.getIsLogin()) {
+			user.setIsLogin(false);
+			title = "用户已在别的地方登录，请重新登录";
+		}
+		
+		JLabel titleLabel = new JLabel(title, JLabel.CENTER);
+		titleLabel.setBounds(0, 18, 414, 25);
 		titleLabel.setFont(new Font("微软雅黑", Font.PLAIN, 18));
 		panel.add(titleLabel);
 
-		checkCodelabel = new JLabel();
-		checkCodelabel.setBounds(67, 50, 293, 190);
-		checkCodelabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		panel.add(checkCodelabel);
+		JLabel lbAccount = new JLabel("登录名：");
+		lbAccount.setBounds(34, 55, 53, 25);
+		panel.add(lbAccount);
+		
+		txtAccount = new JTextField(20);
+		//txtAccount.setFont(new Font("微软雅黑", Font.PLAIN, 16));
+		txtAccount.setBounds(83, 55, 301, 25);
+		panel.add(txtAccount);
+		
+		JLabel pwdLabel = new JLabel("密   码：");
+		pwdLabel.setBounds(34, 90, 53, 25);
+		panel.add(pwdLabel);
 
-		JLabel userLabel = new JLabel("验证码：");
-		userLabel.setBounds(67, 220, 53, 25);
-		panel.add(userLabel);
-
-		codeText = new JTextField(20);
-		codeText.setFont(new Font("Verdana", Font.PLAIN, 16));
-		codeText.setBounds(120, 220, 163, 25);
-		panel.add(codeText);
+		txtPassword = new JPasswordField(20);
+		//txtPassword.setFont(new Font("Verdana", Font.PLAIN, 16));
+		txtPassword.setBounds(83, 90, 301, 25);
+		panel.add(txtPassword);
+		
+		JLabel lbCaptcha = new JLabel("验证码：");
+		lbCaptcha.setBounds(34, 125, 53, 25);
+		panel.add(lbCaptcha);
 
 		// 创建登录按钮
-		JButton loginButton = new JButton("登录");
-		loginButton.setBounds(67, 250, 216, 25);
-		panel.add(loginButton);
+		JButton btnLogin = new JButton("登录");
+		btnLogin.setBounds(83, 335, 301, 40);
+		//btnLogin.setFont(new Font("微软雅黑", Font.PLAIN, 18));
+		panel.add(btnLogin);
+		
+		captchaView = new CaptchaView();
+		captchaView.setBounds(87, 125, 293, 190);
+		captchaView.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		panel.add(captchaView);
 
-		add(panel);
-
-		checkCodelabel.addMouseListener(new MouseAdapter() {
-
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				refeshCheckImage();
-			}
-		});
-
-		codeText.addMouseListener(new MouseAdapter() {
+		captchaView.addMouseListener(new MouseAdapter() {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				codeText.selectAll();
+				int x = e.getX();
+				int y = e.getY();
+				
+				if(x > 236 && y > 3 && y < 28) {
+					refeshCheckImage();
+				}
+				
+				if(y > 30) {
+					captchaView.mark(x, y);
+				}
+			}
+		});
+
+		add(panel);
+
+//		checkCodelabel.addMouseListener(new MouseAdapter() {
+//
+//			@Override
+//			public void mouseClicked(MouseEvent e) {
+//				refeshCheckImage();
+//			}
+//		});
+
+		txtAccount.addMouseListener(new MouseAdapter() {
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				txtAccount.selectAll();
 			}
 
 		});
 
-		codeText.addActionListener(new ActionListener() {
+		txtAccount.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				doLogin();
 			}
 		});
 
-		loginButton.addActionListener(new ActionListener() {
+		btnLogin.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				doLogin();
@@ -163,10 +223,22 @@ public class LoginForm extends JDialog {
 		if (loning)
 			return;
 
-		String checkCode = codeText.getText();
+		String account = txtAccount.getText();
+		String password = new String(txtPassword.getPassword());
+		String captcha = captchaView.getResult();
 
-		if (checkCode.trim().length() < 4) {
-			codeText.grabFocus();
+		if (account.trim().length() == 0) {
+			txtAccount.grabFocus();
+			return;
+		}
+		
+		if (password.trim().length() == 0) {
+			txtPassword.grabFocus();
+			return;
+		}
+		
+		if (captcha == null) {
+			JOptionPane.showMessageDialog(this, "请点击图片验证码!", "提示", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
 
@@ -174,29 +246,37 @@ public class LoginForm extends JDialog {
 
 		try {
 			
-			JSONObject loginRs = action.login("", "", user);
+			if(action.captchaCheck(captcha, user)) {
+				
+				captchaView.tipSuccess();
+			} else {
+				
+				captchaView.tipFail();
+				refeshCheckImage();
+				return;
+			}
+			
+			JSONObject loginRs = action.login(account, password, user);
 
-			String flag = loginRs.getString("flag");
-			String message = loginRs.getString("message");
+			String flag = loginRs.getString(Action.RESULT_CODE_KEY);
+			String message = loginRs.getString(Action.RESULT_MESSAGE_KEY);
 
-			if (!"-1".equals(flag)) {
+			if (Action.RESULT_CODE_SUCCESS.equals(flag)) {
 
 				MainForm mainForm = (MainForm) this.getOwner();
 
 				user.setIsLogin(true);
-				senderButton.setEnabled(false);
 				mainForm.getLoginTable().selectAll();
 				// JOptionPane.showMessageDialog(this, "登录成功！", "提示", JOptionPane.INFORMATION_MESSAGE);
 				mainForm.writeMsg("登录成功！", user);
-				action.initUser(senderButton, user);
 				dispose();
 			} else {
 
 				JOptionPane.showMessageDialog(this, message, "登录错误", JOptionPane.WARNING_MESSAGE);
 
 				if (!"NOTBINDCA".equals(message)) {
-					codeText.setText("");
-					codeText.grabFocus();
+					txtAccount.setText("");
+					txtAccount.grabFocus();
 					refeshCheckImage();
 				}
 			}
@@ -206,5 +286,4 @@ public class LoginForm extends JDialog {
 			loning = false;
 		}
 	}
-
 }

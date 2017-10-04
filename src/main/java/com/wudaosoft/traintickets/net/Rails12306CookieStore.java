@@ -1,11 +1,18 @@
-/* 
- * Copyright(c)2010-2017 WUDAOSOFT.COM
+/**
+ *    Copyright 2009-2017 Wudao Software Studio(wudaosoft.com)
  * 
- * Email:changsoul.wu@gmail.com
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
  * 
- * QQ:275100589
- */ 
- 
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package com.wudaosoft.traintickets.net;
 
 import java.io.Serializable;
@@ -19,23 +26,22 @@ import org.apache.http.annotation.GuardedBy;
 import org.apache.http.annotation.ThreadSafe;
 import org.apache.http.client.CookieStore;
 import org.apache.http.cookie.Cookie;
-import org.apache.http.cookie.CookieIdentityComparator;
 
 /** 
  * @author Changsoul Wu
  * 
  */
 @ThreadSafe
-public class BasicCookieStore implements CookieStore, Serializable {
+public class Rails12306CookieStore implements CookieStore, Serializable {
 
-    private static final long serialVersionUID = -7581093305228232025L;
-
-    @GuardedBy("this")
+	private static final long serialVersionUID = 2477194595037026119L;
+	
+	@GuardedBy("this")
     private final TreeSet<Cookie> cookies;
 
-    public BasicCookieStore() {
+    public Rails12306CookieStore() {
         super();
-        this.cookies = new TreeSet<Cookie>(new CookieIdentityComparator());
+        this.cookies = new TreeSet<Cookie>(new Rails12306CookieIdentityComparator());
     }
 
     /**

@@ -23,13 +23,13 @@ import org.apache.http.HttpHost;
  * @author Changsoul Wu
  * 
  */
-public class TicketsHostConfig extends HostConfig {
+public class Rails12306HostConfig extends DefaultHostConfig {
 	
 	private String referer = "https://kyfw.12306.cn/otn/login/init";
 	private HttpHost host;
 	private String hostUrl;
 	
-	public TicketsHostConfig() {
+	public Rails12306HostConfig() {
 		super();
 		host = new HttpHost("kyfw.12306.cn", -1, "https");
 		hostUrl = host.toURI();
@@ -58,6 +58,11 @@ public class TicketsHostConfig extends HostConfig {
 	@Override
 	public String getHostUrl() {
 		return hostUrl;
+	}
+
+	@Override
+	public boolean isMulticlient() {
+		return false;
 	}
 
 	

@@ -15,9 +15,7 @@
  */
 package com.wudaosoft.traintickets;
 
-import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,11 +26,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -40,9 +36,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 
-import org.apache.http.client.ClientProtocolException;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -60,10 +59,11 @@ import com.wudaosoft.traintickets.model.ApplyStatus;
 import com.wudaosoft.traintickets.model.LoginInfo;
 import com.wudaosoft.traintickets.model.UserInfo;
 import com.wudaosoft.traintickets.net.CookieUtil;
-import com.wudaosoft.traintickets.net.DomainConfig;
 import com.wudaosoft.traintickets.net.HostConfig;
+import com.wudaosoft.traintickets.net.Rails12306CookieStore;
+import com.wudaosoft.traintickets.net.Rails12306HostConfig;
+import com.wudaosoft.traintickets.net.Rails12306IEHeadersInterceptor;
 import com.wudaosoft.traintickets.net.Request;
-import com.wudaosoft.traintickets.net.TicketsHostConfig;
 import com.wudaosoft.traintickets.util.DateUtil;
 import com.wudaosoft.traintickets.util.StringUtils;
 
@@ -73,6 +73,9 @@ import com.wudaosoft.traintickets.util.StringUtils;
  */
 public class Action {
 
+	public static final String RESULT_CODE_KEY = "result_code";
+	public static final String RESULT_MESSAGE_KEY = "result_message";
+	public static final String RESULT_CODE_SUCCESS = "0";
 	public static final String SERVER_TIME_PATTEN = "E, dd MMM yyyy HH:mm:ss";
 	public static final String CLIENT_TIME_PATTEN = "yyyy-MM-dd HH:mm:ss";
 
@@ -87,20 +90,26 @@ public class Action {
 
 	private static Action instance;
 
-	private ScheduledExecutorService executorService = Executors
+	private final ScheduledExecutorService executorService = Executors
 			.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() * 2);
-	private ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-	private ScheduledExecutorService timerExecutorService = Executors.newSingleThreadScheduledExecutor();
+	private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+	private final ScheduledExecutorService timerExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-	private HostConfig hostConfig;
+	private final HostConfig hostConfig;
 	
-	private Request request;
+	private final Request request;
+	
+	private final UserInfo defaultUser;
 
 	private Calendar serverTime;
 
 	private MainForm mainForm;
 
 	private long timPeriod;
+
+	public UserInfo getDefaultUser() {
+		return defaultUser;
+	}
 
 	public long getTimPeriod() {
 		return timPeriod;
@@ -119,8 +128,12 @@ public class Action {
 	}
 
 	private Action() {
-		hostConfig = new TicketsHostConfig();
-		request = new Request(hostConfig);
+		defaultUser = new UserInfo();
+		users.putIfAbsent("defaultUser", defaultUser);
+		hostConfig = new Rails12306HostConfig();
+		HttpRequestRetryHandler retryHandler = new DefaultHttpRequestRetryHandler(0, false);
+		HttpRequestInterceptor requestInterceptor = new Rails12306IEHeadersInterceptor(hostConfig);
+		request = Request.custom().setHostConfig(hostConfig).setDefaultCookieStoreClass(Rails12306CookieStore.class).setRetryHandler(retryHandler).setRequestInterceptor(requestInterceptor).build();
 		timPeriod = 0;
 		serverTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+8"), Locale.US);
 	}
@@ -145,6 +158,7 @@ public class Action {
 		executorService.shutdown();
 		scheduledExecutorService.shutdown();
 		timerExecutorService.shutdown();
+		request.shutdown();
 	}
 
 	/**
@@ -156,7 +170,7 @@ public class Action {
 	 */
 	public LoginInfo preLogin(UserInfo userInfo) throws Exception {
 
-		String loginForm = request.get(hostConfig.getHostUrl(), DomainConfig.LOGIN_PAGE, userInfo.getContext());
+		String loginForm = request.get(hostConfig.getHostUrl(), "", userInfo.getContext());
 
 		LoginInfo info = new LoginInfo();
 		info.set_1_(findHiddenInputValue(loginForm, "_1_"));
@@ -168,32 +182,64 @@ public class Action {
 
 		return info;
 	}
-
+	
 	/**
-	 * 登录
 	 * 
 	 * @param userInfo
-	 * @param imagCheck
-	 * @param info
 	 * @return
 	 * @throws Exception
 	 */
-	public JSONObject captchaCheck(String answer, UserInfo userInfo) throws Exception {
+	public String getLeftTicketPage (HttpClientContext context) throws Exception {
+		
+		return request.get(hostConfig.getHostUrl(), ApiCons.LEFT_TICKET_PAGE, context);
+	}
+	
+	public String getLoginPage (HttpClientContext context) throws Exception {
+		
+		return request.get(hostConfig.getHostUrl(), ApiCons.LOGIN_PAGE, context);
+	}
+	
+	/**
+	 * 
+	 * @param userInfo
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean authUamtk(UserInfo userInfo) throws Exception {
+		
+		Map<String, String> params = new LinkedHashMap<String, String>();
+		params.put("appid", ApiCons.APP_ID);
+		
+		JSONObject rs = request.postAjax(hostConfig.getHostUrl(), ApiCons.AUTH_UAMTK_AJAX, params, userInfo.getContext());
+		
+		return checkApiResult("0", rs);
+	}
+	
+	/**
+	 * 
+	 * @param answer
+	 * @param userInfo
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean captchaCheck(String answer, UserInfo userInfo) throws Exception {
 		
 		Map<String, String> params = new LinkedHashMap<String, String>();
 		params.put("answer", answer);
 		params.put("login_site", "E");
 		params.put("rand", "sjrand");
 		
-		return request.postAjax(hostConfig.getHostUrl(), ApiCons.AJAX_CAPTCHA_CHECK, params, userInfo.getContext());
+		JSONObject rs = request.postAjax(hostConfig.getHostUrl(), ApiCons.CAPTCHA_CHECK_AJAX, params, userInfo.getContext());
+		
+		return checkApiResult("4", rs);
 	}
 	
 	/**
 	 * 登录
 	 * 
+	 * @param username
+	 * @param password
 	 * @param userInfo
-	 * @param imagCheck
-	 * @param info
 	 * @return
 	 * @throws Exception
 	 */
@@ -204,7 +250,7 @@ public class Action {
 		params.put("password", password);
 		params.put("appid", ApiCons.APP_ID);
 
-		return request.postAjax(hostConfig.getHostUrl(), ApiCons.AJAX_LOGIN, params, userInfo.getContext());
+		return request.postAjax(hostConfig.getHostUrl(), ApiCons.LOGIN_AJAX, params, userInfo.getContext());
 	}
 
 	/**
@@ -220,7 +266,7 @@ public class Action {
 		Map<String, String> params = new LinkedHashMap<String, String>();
 		params.put("sessionid", sessionId);
 
-		JSONObject data = request.postAjax(hostConfig.getHostUrl(), DomainConfig.AJAX_LOGOUT, params,
+		JSONObject data = request.postAjax(hostConfig.getHostUrl(), "", params,
 				userInfo.getContext());
 
 		log.debug("UserId[" + userInfo.getLoginId() + "] logout data: " + data);
@@ -309,8 +355,6 @@ public class Action {
 					return;
 				}
 				
-				setHeartbeatScheduled(userInfo);
-				
 				userInfo.setApplyData(applyData);
 				mainForm.getLoginTable().selectAll();
 				mainForm.writeMsg("初始化用户数据成功，申请ID：" + applyId, userInfo);
@@ -322,23 +366,24 @@ public class Action {
 	 * 获取服务器时间
 	 * 
 	 * @param timeStatusbar
-	 * @param systemContext
-	 * @param systemContext
+	 * @param context
 	 */
-	public void getServerTime(final JLabel timeStatusbar, final HttpClientContext systemContext) {
+	public void getServerTime(final JLabel timeStatusbar, final HttpClientContext context) {
 		executorService.execute(new Runnable() {
 
 			@Override
 			public void run() {
 				try {
+					
+					getLoginPage(context);
 
 					mainForm.writeMsg("正在获取服务器时间...");
 
 					SimpleDateFormat format = new SimpleDateFormat(SERVER_TIME_PATTEN, Locale.US);
 					format.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-					String dateStr = request.getServerTime(hostConfig.getHostUrl(), DomainConfig.NETWORK_CHECK,
-							systemContext);
+					String dateStr = request.getServerTime(hostConfig.getHostUrl(), ApiCons.LOGIN_PAGE,
+							context);
 					setTimer(timeStatusbar);
 
 					dateStr = dateStr.substring(0, dateStr.length() - 4);
@@ -375,46 +420,37 @@ public class Action {
 	}
 
 	/**
-	 * 设置Session心跳任务，防止Session过期。每16分钟执行一次
-	 * 
-	 * @param userInfo
-	 */
-	public void setHeartbeatScheduled(final UserInfo userInfo) {
-
-		scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
-			public void run() {
-				try {
-
-					request.sendHeartbeat(hostConfig.getHostUrl(), DomainConfig.IMAGE_CHECK, userInfo.getContext());
-
-					log.info(String.format("send heartbeat by userId: %s", userInfo.getLoginId()));
-				} catch (Exception e) {
-					log.error("发送心跳失败，UserId[" + userInfo.getLoginId() + "]。 " + e.getMessage(), e);
-				}
-			}
-		}, 16, 16, TimeUnit.MINUTES);
-	}
-
-	/**
 	 * 设置网络延时定时任务，每5秒执行一次
 	 * 
 	 * @param speedStatusbar
 	 * @param systemContext
 	 */
-	public void setSpeedScheduled(final JLabel speedStatusbar, final HttpClientContext systemContext) {
+	public void setSpeedScheduled(final JLabel speedStatusbar, final UserInfo userInfo) {
 
 		scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
 			public void run() {
 				try {
-
-					long daly = request.testNetworkDaly(hostConfig.getHostUrl(), DomainConfig.NETWORK_CHECK, systemContext);
-
+					
+					long daly = request.testNetworkDalyByGet(hostConfig.getHostUrl(), ApiCons.NETWORK_CHECK, userInfo.getContext());
 					speedStatusbar.setText("网络延时：" + daly + "ms");
+					
+					if(!authUamtk(userInfo)) {
+						try {
+							SwingUtilities.invokeAndWait(new Runnable() {
+								public void run() {
+									mainForm.showLoginForm();
+								}
+							});
+						} catch (Exception exc) {
+							log.error("Can't create because of " + exc.getMessage(), exc);
+						}
+					}
+						
 				} catch (Exception e) {
 					log.error("测式网络延时失败！" + e.getMessage(), e);
 				}
 			}
-		}, 0, 5, TimeUnit.SECONDS);
+		}, 1000, 5000, TimeUnit.MILLISECONDS);
 	}
 
 	/**
@@ -455,7 +491,7 @@ public class Action {
 	 */
 	public String getResultPageSourceCode(UserInfo userInfo) throws Exception {
 
-		return request.get(hostConfig.getHostUrl(), DomainConfig.QUERY_RESULT, userInfo.getContext());
+		return request.get(hostConfig.getHostUrl(), "", userInfo.getContext());
 	}
 
 	
@@ -551,7 +587,7 @@ public class Action {
 	
 	public Map<String, Object> getApplyPageData(UserInfo userInfo) throws Exception {
 		
-		String html = request.get(hostConfig.getHostUrl(), DomainConfig.APPLY_DADA_PAGE, userInfo.getContext());
+		String html = request.get(hostConfig.getHostUrl(), "", userInfo.getContext());
 		
 		//log.debug("UserId[" + userInfo.getLoginId() + "] getApplyPageData source code: " + html);
 		
@@ -650,7 +686,7 @@ public class Action {
 			
 			//params.entrySet().forEach(e -> pars.put(e.getKey(), e.getValue().toString()));
 			
-			String subRs = request.post(hostConfig.getHostUrl(), DomainConfig.APPLY_DADA_SUBMIT, pars, userInfo.getContext());
+			String subRs = request.post(hostConfig.getHostUrl(), "", pars, userInfo.getContext());
 			
 			log.debug("UserId[" + userInfo.getLoginId() + "] submitApplyData: " + subRs);
 			
@@ -742,7 +778,7 @@ public class Action {
 
 		log.debug("UserId[" + userInfo.getLoginId() + "] doService: " + serviceName + ", parameter: " + JSON.toJSONString(tmpParams));
 		
-		JSONObject result = request.postAjax(hostConfig.getHostUrl(), DomainConfig.AJAX_ADAPTER, tmpParams,
+		JSONObject result = request.postAjax(hostConfig.getHostUrl(), "", tmpParams,
 				userInfo.getContext());
 
 		log.debug("UserId[" + userInfo.getLoginId() + "] doService: " + serviceName + ", result: " + result);
@@ -789,7 +825,7 @@ public class Action {
 		}
 	}
 	
-	public Image getCaptchaImage(UserInfo userInfo) throws Exception {
+	public BufferedImage getCaptchaImage(UserInfo userInfo) throws Exception {
 		
 		String api = ApiCons.CAPTCHA_IMAGE + "?login_site=E&module=login&rand=sjrand&" + Math.random();
 		
@@ -799,8 +835,12 @@ public class Action {
 	/**
 	 * @param userInfo
 	 */
-	public void grabSingleBuzu(UserInfo userInfo) {
+	public void applyOnece(UserInfo userInfo) {
 		executorService.execute(new ApplyRunnable(userInfo));
+	}
+	
+	private boolean checkApiResult(String code, JSONObject rs) {
+		return code.equals(rs.getString(RESULT_CODE_KEY)) ? true : false;
 	}
 
 }

@@ -26,7 +26,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -55,7 +54,7 @@ public class CaptchaForm extends JDialog {
 
 	private Action action = Action.getInstance();
 
-	private JLabel checkCodelabel;
+	private CaptchaView captchaView;
 
 	public CaptchaForm(Frame owner, UserInfo user, boolean modal) throws HeadlessException {
 		super(owner, modal);
@@ -63,7 +62,7 @@ public class CaptchaForm extends JDialog {
 
 		initComponents();
 		setTitle("验证吗");
-		setSize(400, 320);
+		setSize(414, 335);
 		setResizable(false);
 		setLocationRelativeTo(getOwner()); // 居中显示
 //		setAlwaysOnTop(true);
@@ -81,7 +80,7 @@ public class CaptchaForm extends JDialog {
 
 	private void refeshCheckImage() {
 		try {
-			checkCodelabel.setIcon(new ImageIcon(action.getCaptchaImage(user)));
+			captchaView.setCaptchaImage(action.getCaptchaImage(user));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -95,36 +94,46 @@ public class CaptchaForm extends JDialog {
 		JPanel panel = new JPanel();
 		panel.setLayout(null);
 
-		JLabel titleLabel = new JLabel("点击选择验证码", JLabel.CENTER);
-		titleLabel.setBounds(0, 18, 350, 25);
+		JLabel titleLabel = new JLabel("根据提示选择图片", JLabel.CENTER);
+		titleLabel.setBounds(120, 18, 174, 25);
 		titleLabel.setFont(new Font("微软雅黑", Font.PLAIN, 18));
 		panel.add(titleLabel);
-
-		checkCodelabel = new JLabel();
-		checkCodelabel.setBounds(67, 50, 293, 190);
-		checkCodelabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		panel.add(checkCodelabel);
-
 		
 		// 创建登录按钮
 		JButton loginButton = new JButton("确定");
-		loginButton.setBounds(67, 268, 216, 25);
+		loginButton.setBounds(120, 268, 174, 25);
 		panel.add(loginButton);
-
+	
 		add(panel);
 
-		checkCodelabel.addMouseListener(new MouseAdapter() {
+		captchaView = new CaptchaView();
+		captchaView.setBounds(60, 60, 293, 190);
+		captchaView.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		panel.add(captchaView);
+
+		captchaView.addMouseListener(new MouseAdapter() {
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				refeshCheckImage();
+				int x = e.getX();
+				int y = e.getY();
+				
+				if(x > 236 && y > 3 && y < 28) {
+					refeshCheckImage();
+				}
+				
+				if(y > 30) {
+					captchaView.mark(x, y);
+				}
 			}
 		});
 
 		loginButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				doLogin();
+				//doLogin();
+				captchaView.tipSuccess();
+				System.out.println(captchaView.getResult());
 			}
 		});
 	}
