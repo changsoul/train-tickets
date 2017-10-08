@@ -100,4 +100,12 @@ public abstract class DefaultHostConfig implements HostConfig {
 	public boolean isMulticlient() {
 		return false;
 	}
+
+	@Override
+	public int getPoolSize() {
+		
+		return 150;
+	}
+	
+	
 }

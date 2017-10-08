@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,14 +29,21 @@ import java.util.List;
  * 
  */
 public class FileUtil {
-
+	
 	public static List<String> readLine(File file) throws IOException {
+		
+		return readLine(null, new FileInputStream(file));
+	}
+
+	public static List<String> readLine(List<String> list, InputStream inputStream) throws IOException {
 
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+			reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
 			String line = null;
-			List<String> list = new ArrayList<String>();
+			
+			if(list == null)
+				list = new ArrayList<String>();
 
 			while ((line = reader.readLine()) != null) {
 

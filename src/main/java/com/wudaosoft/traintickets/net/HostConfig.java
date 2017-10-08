@@ -41,5 +41,7 @@ public interface HostConfig {
 	char[] getCAPassword();
 
 	boolean isMulticlient();
+	
+	int getPoolSize();
 
 }

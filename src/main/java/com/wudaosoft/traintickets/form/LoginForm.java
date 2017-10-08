@@ -21,6 +21,8 @@ import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -46,7 +48,7 @@ import com.wudaosoft.traintickets.model.UserInfo;
  * 
  */
 @SuppressWarnings("serial")
-public class LoginForm extends JDialog {
+public class LoginForm extends JDialog implements KeyListener{
 
 	private static final Logger log = LoggerFactory.getLogger(LoginForm.class);
 
@@ -59,6 +61,8 @@ public class LoginForm extends JDialog {
 	private JTextField txtAccount;
 	
 	private JPasswordField txtPassword;
+	
+	private JButton btnLogin;
 	
 	private CaptchaView captchaView;
 
@@ -157,8 +161,8 @@ public class LoginForm extends JDialog {
 		panel.add(lbCaptcha);
 
 		// 创建登录按钮
-		JButton btnLogin = new JButton("登录");
-		btnLogin.setBounds(83, 335, 301, 40);
+		btnLogin = new JButton("登录");
+		btnLogin.setBounds(83, 325, 301, 40);
 		//btnLogin.setFont(new Font("微软雅黑", Font.PLAIN, 18));
 		panel.add(btnLogin);
 		
@@ -170,29 +174,17 @@ public class LoginForm extends JDialog {
 		captchaView.addMouseListener(new MouseAdapter() {
 
 			@Override
-			public void mousePressed(MouseEvent e) {
+			public void mouseClicked(MouseEvent e) {
 				int x = e.getX();
 				int y = e.getY();
 				
 				if(x > 236 && y > 3 && y < 28) {
 					refeshCheckImage();
 				}
-				
-				if(y > 30) {
-					captchaView.mark(x, y);
-				}
 			}
 		});
 
 		add(panel);
-
-//		checkCodelabel.addMouseListener(new MouseAdapter() {
-//
-//			@Override
-//			public void mouseClicked(MouseEvent e) {
-//				refeshCheckImage();
-//			}
-//		});
 
 		txtAccount.addMouseListener(new MouseAdapter() {
 
@@ -200,22 +192,36 @@ public class LoginForm extends JDialog {
 			public void mousePressed(MouseEvent e) {
 				txtAccount.selectAll();
 			}
-
 		});
-
-		txtAccount.addActionListener(new ActionListener() {
+		
+		txtPassword.addMouseListener(new MouseAdapter() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				doLogin();
+			public void mousePressed(MouseEvent e) {
+				txtAccount.selectAll();
 			}
 		});
+
+		txtAccount.addKeyListener(this);
+		txtPassword.addKeyListener(this);
+		btnLogin.addKeyListener(this);
 
 		btnLogin.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				doLogin();
+				doLoginAysnc();
 			}
 		});
+	}
+	
+	private void doLoginAysnc() {
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				doLogin();
+			}
+		}).start();
 	}
 
 	private void doLogin() {
@@ -227,13 +233,14 @@ public class LoginForm extends JDialog {
 		String password = new String(txtPassword.getPassword());
 		String captcha = captchaView.getResult();
 
-		if (account.trim().length() == 0) {
+		if (account.trim().length() < 2) {
 			txtAccount.grabFocus();
 			return;
 		}
 		
-		if (password.trim().length() == 0) {
+		if (password.trim().length() < 6) {
 			txtPassword.grabFocus();
+			JOptionPane.showMessageDialog(this, "密码必须大于等于6位数!", "提示", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
 		
@@ -246,12 +253,13 @@ public class LoginForm extends JDialog {
 
 		try {
 			
-			if(action.captchaCheck(captcha, user)) {
-				
-				captchaView.tipSuccess();
-			} else {
+			if (!action.captchaCheck(captcha, user)) {
 				
 				captchaView.tipFail();
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {
+				}
 				refeshCheckImage();
 				return;
 			}
@@ -263,27 +271,46 @@ public class LoginForm extends JDialog {
 
 			if (Action.RESULT_CODE_SUCCESS.equals(flag)) {
 
-				MainForm mainForm = (MainForm) this.getOwner();
+				//MainForm mainForm = (MainForm) this.getOwner();
 
 				user.setIsLogin(true);
-				mainForm.getLoginTable().selectAll();
+				//mainForm.getLoginTable().selectAll();
 				// JOptionPane.showMessageDialog(this, "登录成功！", "提示", JOptionPane.INFORMATION_MESSAGE);
-				mainForm.writeMsg("登录成功！", user);
+				//mainForm.writeMsg("登录成功！", user);
+				
+				captchaView.tipSuccess();
+				try {
+					Thread.sleep(800);
+				} catch (InterruptedException e) {
+				}
 				dispose();
 			} else {
 
+				captchaView.tipFail();
 				JOptionPane.showMessageDialog(this, message, "登录错误", JOptionPane.WARNING_MESSAGE);
-
-				if (!"NOTBINDCA".equals(message)) {
-					txtAccount.setText("");
-					txtAccount.grabFocus();
-					refeshCheckImage();
-				}
+				refeshCheckImage();
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "登录出错：" + e.getMessage(), "登录错误", JOptionPane.ERROR_MESSAGE);
 		} finally {
 			loning = false;
 		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		
+		if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+			doLoginAysnc();
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		
 	}
 }

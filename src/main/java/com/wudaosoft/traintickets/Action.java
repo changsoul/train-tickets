@@ -56,7 +56,6 @@ import com.wudaosoft.traintickets.exception.ServiceException;
 import com.wudaosoft.traintickets.form.MainForm;
 import com.wudaosoft.traintickets.form.MyButton;
 import com.wudaosoft.traintickets.model.ApplyStatus;
-import com.wudaosoft.traintickets.model.LoginInfo;
 import com.wudaosoft.traintickets.model.UserInfo;
 import com.wudaosoft.traintickets.net.CookieUtil;
 import com.wudaosoft.traintickets.net.HostConfig;
@@ -161,28 +160,6 @@ public class Action {
 		request.shutdown();
 	}
 
-	/**
-	 * 预登录，获取登录页面表单相关数据
-	 * 
-	 * @param userInfo
-	 * @return
-	 * @throws Exception
-	 */
-	public LoginInfo preLogin(UserInfo userInfo) throws Exception {
-
-		String loginForm = request.get(hostConfig.getHostUrl(), "", userInfo.getContext());
-
-		LoginInfo info = new LoginInfo();
-		info.set_1_(findHiddenInputValue(loginForm, "_1_"));
-		info.setDesKey(findHiddenInputValue(loginForm, "des_key"));
-		info.setTicket(findHiddenInputValue(loginForm, "ticket"));
-		info.setSubsys(findHiddenInputValue(loginForm, "subsys"));
-
-		// System.out.println(findHiddenInputValue(loginForm, "signature"));
-
-		return info;
-	}
-	
 	/**
 	 * 
 	 * @param userInfo

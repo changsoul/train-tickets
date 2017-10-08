@@ -207,7 +207,7 @@ public class Request {
 				// return 30 * 1000;
 				// }
 
-				return 30 * 1000;
+				return 10 * 1000;
 			}
 
 		};
@@ -252,10 +252,10 @@ public class Request {
 				.register("http", PlainConnectionSocketFactory.getSocketFactory())
 				.register("https", sslConnectionSocketFactory).build());
 
-		connManager.setMaxTotal(400);
-		connManager.setDefaultMaxPerRoute(50);
+		connManager.setMaxTotal(hostConfig.getPoolSize() + 30);
+		connManager.setDefaultMaxPerRoute(10);
 		connManager.setMaxPerRoute(new HttpRoute(hostConfig.getHost(), null,
-				!HttpHost.DEFAULT_SCHEME_NAME.equals(hostConfig.getHost().getSchemeName())), 300);
+				!HttpHost.DEFAULT_SCHEME_NAME.equals(hostConfig.getHost().getSchemeName())), hostConfig.getPoolSize());
 		// connManager.setValidateAfterInactivity(2000);
 
 		// Create socket configuration
@@ -576,7 +576,7 @@ public class Request {
 
 		HttpClientBuilder builder = HttpClients.custom().setConnectionManager(connManager)
 				.setKeepAliveStrategy(myKeepAliveStrategy).setDefaultRequestConfig(hostConfig.getRequestConfig())
-				.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE)
+//				.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE)
 				.setRetryHandler(retryHandler).setDefaultCookieStore(cookieStore);
 
 		if (requestInterceptor != null) {

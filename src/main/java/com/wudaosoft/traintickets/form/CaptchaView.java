@@ -16,10 +16,6 @@
 package com.wudaosoft.traintickets.form;
 
 import java.awt.Graphics;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.ContainerEvent;
-import java.awt.event.ContainerListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -31,7 +27,7 @@ import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
-import com.wudaosoft.traintickets.util.Point;
+import com.wudaosoft.traintickets.model.Point;
 
 /**
  * @author changsoul.wu
@@ -41,8 +37,8 @@ public class CaptchaView extends JPanel {
 
 	private static final long serialVersionUID = 9146510559987458061L;
 
-	private final List<Point> positions = new ArrayList<Point>();
-	private final List<Point> results = new ArrayList<Point>();
+	private final List<Point> positions = new ArrayList<Point>(20);
+	private final List<Point> results = new ArrayList<Point>(20);
 
 	private BufferedImage captchaTemplate;
 	
@@ -71,7 +67,6 @@ public class CaptchaView extends JPanel {
 			failImg = captchaTemplate.getSubimage(0, 203, 293, 190);
 			successImg = captchaTemplate.getSubimage(0, 393, 293, 190);
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		
 		addMouseListener(new MouseAdapter() {
@@ -84,6 +79,10 @@ public class CaptchaView extends JPanel {
 				if(x > 236 && y > 3 && y < 28) {
 					isPressRefresh = true;
 					repaint();
+				}
+				
+				if(y > 30) {
+					mark(x, y);
 				}
 			}
 		});
@@ -139,18 +138,10 @@ public class CaptchaView extends JPanel {
 	
 	public void tipFail() {
 		setCaptchaImage(failImg);
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-		}
 	}
 	
 	public void tipSuccess() {
 		setCaptchaImage(successImg);
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-		}
 	}
 	
 	public String getResult() {

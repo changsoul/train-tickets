@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.wudaosoft.traintickets.util;
+package com.wudaosoft.traintickets.model;
 
 import java.io.Serializable;
 

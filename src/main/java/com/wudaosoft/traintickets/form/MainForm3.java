@@ -43,7 +43,6 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -64,9 +63,9 @@ import com.wudaosoft.traintickets.util.ExtensionFileFilter;
  * 
  */
 @SuppressWarnings("serial")
-public class MainForm extends JFrame {
+public class MainForm3 extends JFrame {
 	
-	private static final Logger log = LoggerFactory.getLogger(MainForm.class);
+	private static final Logger log = LoggerFactory.getLogger(MainForm3.class);
 
 	private final Action action = Action.getInstance();
 
@@ -91,17 +90,11 @@ public class MainForm extends JFrame {
 	private StringBuffer msgBuffer;
 	
 	private UserTableModel userModel;
-	
-	private JPanel contentPane;
-	
-	private StatusBar statusBar;
-	
-	private JTabbedPane tabPane;
 
-	public MainForm() throws HeadlessException {
+	public MainForm3() throws HeadlessException {
 		super();
 		this.msgBuffer = new StringBuffer();
-        action.setMainForm(this);
+        //action.setMainForm(this);
 		initComponents();
 		setTitle("购票助手");
 		//setSize(1000, 650);
@@ -116,6 +109,7 @@ public class MainForm extends JFrame {
 
 			@Override
 			public void windowClosing(WindowEvent e) {
+				super.windowClosing(e);
 
 				int i = JOptionPane.showConfirmDialog(null, "确定要退出系统吗？", "退出系统", JOptionPane.YES_NO_OPTION);
 		        if(i == JOptionPane.YES_OPTION){
@@ -129,7 +123,8 @@ public class MainForm extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowOpened(WindowEvent e) {
-				//initNetwork();
+				super.windowOpened(e);
+				initNetwork();
 			}
 		});
 		
@@ -181,109 +176,22 @@ public class MainForm extends JFrame {
 				openCaptchaForm(action.getDefaultUser());
 			}
 		});
-		
-		
-		tabPane = new JTabbedPane(JTabbedPane.TOP);
-		add(tabPane);
-		
-		setLayout();
-		
-		tabPane.setSelectedIndex(0);
 		   
-//		JSplitPane splitPane = new JSplitPane();
-//		splitPane.setOneTouchExpandable(true);
-//		splitPane.setContinuousLayout(true);
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setContinuousLayout(true);
 		// splitPane.setPreferredSize(new Dimension(50, 100));
-//		splitPane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-//
-//		setLeftPanel(splitPane);
-//		setMessageTextArea(splitPane);
+		splitPane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+
+		setLeftPanel(splitPane);
+		setMessageTextArea(splitPane);
 		// splitPane.setLeftComponent(p1);
 		// splitPane.setRightComponent(p2);
-//		splitPane.setDividerSize(10);
-//		splitPane.setDividerLocation(430);
+		splitPane.setDividerSize(10);
+		splitPane.setDividerLocation(430);
 
-		//setContentPane(splitPane);
-		
+		setContentPane(splitPane);
 		pack();
-	}
-	
-	protected void setLayout() {
-		contentPane=new JPanel();
-        JButton b1=new JButton("港币");//创建了二十五个普通按钮组件
-        JButton b2=new JButton("人民币");
-        JButton b3=new JButton("美元");
-        JButton b4=new JButton("欧元");
-        JButton b5=new JButton("英镑");
-        JButton b6=new JButton("主板");
-        JButton b7=new JButton("内存");
-        JButton b8=new JButton("硬盘");
-        JButton b9=new JButton("显示器");
-        JButton b10=new JButton("鼠标");
-        JButton b11=new JButton("大米");
-        JButton b12=new JButton("蔬菜");
-        JButton b13=new JButton("稻子");
-        JButton b14=new JButton("猪肉");
-        JButton b15=new JButton("牛肉");
-        JButton b16=new JButton("面包");
-        JButton b17=new JButton("蛋糕");
-        JButton b18=new JButton("巧克力");
-        JButton b19=new JButton("奶酪");
-        JButton b20=new JButton("苹果派");
-        JButton b21=new JButton("笔记本");
-        JButton b22=new JButton("电话");
-        JButton b23=new JButton("办公桌");
-        JButton b24=new JButton("钢笔");
-        JButton b25=new JButton("文件夹");
-        contentPane.setLayout(new BorderLayout());
-        JPanel p1=new JPanel();//创建了五个中间容器，并且将它们的布局管理器都设置成BorderLayout方式。
-        JPanel p2=new JPanel();
-        JPanel p3=new JPanel();
-        JPanel p4=new JPanel();
-        JPanel p5=new JPanel();
-        p1.setLayout(new BorderLayout());
-        p2.setLayout(new BorderLayout());
-        p3.setLayout(new BorderLayout());
-        p4.setLayout(new BorderLayout());
-        p5.setLayout(new BorderLayout());
-        contentPane.add(p1,"North");//将五个中间容器对象分别加入到上层中间容器中，并且是按照BorderLayout的方式进行布局
-        contentPane.add(p2,"South");
-        contentPane.add(p3,"East");
-        contentPane.add(p4,"West");
-        contentPane.add(p5,"Center");
-        p1.add(b1,"North");///将从第一个到第五个普通按钮组件按照BorderLayout方式布局到p1中间容器中
-        p1.add(b2,"West");
-        p1.add(b3,"South");
-        p1.add(b4,"East");
-        p1.add(b5,"Center");
-        p2.add(b6,"North");//将从第六个到第十个普通按钮组件按照BorderLayout方式布局到p2中间容器中
-        p2.add(b7,"West");
-        p2.add(b8,"South");
-        p2.add(b9,"East");
-        p2.add(b10,"Center");
-        p3.add(b11,"North");//将从第十一个到第十五个普通按钮组件按照BorderLayout方式布局到p3中间容器中
-        p3.add(b12,"West");
-        p3.add(b13,"South");
-        p3.add(b14,"East");
-        p3.add(b15,"Center");
-        p4.add(b16,"North");//将从第十六个到第二十个普通按钮组件按照BorderLayout方式布局到p4中间容器中
-        p4.add(b17,"West");
-        p4.add(b18,"South");
-        p4.add(b19,"East");
-        p4.add(b20,"Center");
-        p5.add(b21,"North");//将从第二十一个到第二十五个普通按钮组件按照BorderLayout方式布局到p5中间容器中
-        p5.add(b22,"West");
-        p5.add(b23,"South");
-        p5.add(b24,"East");
-        p5.add(b25,"Center");
-        
-        statusBar = new StatusBar();
-        
-        contentPane.add(statusBar, BorderLayout.SOUTH);
-        
-        
-        tabPane.addTab("购票", contentPane);
-        tabPane.addTab("记录", new JPanel());
 	}
 
 	protected void setLeftPanel(JSplitPane splitPane) {
@@ -387,6 +295,7 @@ public class MainForm extends JFrame {
         
         leftPanel.add(new JScrollPane(loginTable), BorderLayout.NORTH);
         leftPanel.add(controlPanel, BorderLayout.CENTER);
+        leftPanel.add(southPanel, BorderLayout.SOUTH);
 
 		splitPane.setLeftComponent(leftPanel);
 	}

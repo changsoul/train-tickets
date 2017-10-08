@@ -65,5 +65,9 @@ public class Rails12306HostConfig extends DefaultHostConfig {
 		return false;
 	}
 
+	@Override
+	public int getPoolSize() {
+		return 250;
+	}
 	
 }
