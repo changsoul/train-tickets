@@ -16,7 +16,6 @@
 package com.wudaosoft.traintickets.form;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 
@@ -37,7 +36,7 @@ public class StatusBar extends JPanel {
 	// Constructor
 	public StatusBar() {
 		setLayout(new FlowLayout(FlowLayout.LEFT, 10, 3));
-		setBackground(Color.LIGHT_GRAY);
+//		setBackground(Color.LIGHT_GRAY);
 		setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
 		add(timePane);
 		add(networkPane);
@@ -74,17 +73,17 @@ public class StatusBar extends JPanel {
 
 		// Helper method for use by constructors
 		private void setupPane() {
-			setBackground(Color.LIGHT_GRAY); // Set background color
-			setForeground(Color.BLACK); // Set foreground color
+//			setBackground(Color.LIGHT_GRAY); // Set background color
+//			setForeground(Color.BLACK); // Set foreground color
 			setFont(paneFont); // Set the fixed font
 			setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED), // Outside
 																												// border
 					BorderFactory.createEmptyBorder(0, 5, 0, 3))); // Inside
 																	// border
-			setPreferredSize(new Dimension(80, 20));
+			//setPreferredSize(new Dimension(80, 20));
 		}
 
 		// Font for pane text
-		private Font paneFont = new Font("Serif", Font.PLAIN, 10);
+		private Font paneFont = new Font("微软雅黑", Font.PLAIN, 12);
 	}
 }

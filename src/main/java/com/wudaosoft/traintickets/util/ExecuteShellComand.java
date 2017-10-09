@@ -42,7 +42,7 @@ public class ExecuteShellComand {
 		String domainName = "kyfw.12306.cn";
 		String command = "host -t a " + domainName;
 
-		String output = executeCommand(command);
+		String output = executeCommand(command, null);
 
 		//System.out.println(output);
 
@@ -59,9 +59,8 @@ public class ExecuteShellComand {
 
 	}
 
-	public static String executeCommand(String command) {
+	public static String executeCommand(String command, String fileEncoding) {
 		
-		String fileEncoding = System.getProperty("file.encoding");
 		if(fileEncoding == null)
 			fileEncoding = "UTF-8";
 
