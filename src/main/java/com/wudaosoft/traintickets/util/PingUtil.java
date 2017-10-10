@@ -24,11 +24,18 @@ import java.util.regex.Pattern;
 public class PingUtil {
 	
 	private static final Pattern WINDOWS_PACKET_LOSS_PATTERN = Pattern.compile(" \\((\\d+?)% 丢失\\)");
+	
 	private static final Pattern WINDOWS_TTL_PATTERN = Pattern.compile(" TTL=(\\d+)");
+	
 	private static final Pattern WINDOWS_PING_PATTERN = Pattern.compile("平均 = (\\d+?)ms");
+	
 	private static final Pattern LINUX_PACKET_LOSS_PATTERN = Pattern.compile(", (\\S+?)% packet loss");
+	
 	private static final Pattern LINUX_TTL_PATTERN = Pattern.compile(" ttl=(\\d+?) ");
+	
 	private static final Pattern LINUX_PING_PATTERN = Pattern.compile(" min/avg/max/\\S* = (.+?) ms");
+	
+	public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
 	
 	public static PingResult ping(String host, int times) {
 		
@@ -37,9 +44,8 @@ public class PingUtil {
 			fileEncoding = "UTF-8";
 		
 		String cmdStr = null;
-		boolean isWindows = isWindows();
 		
-		if (isWindows) {
+		if (IS_WINDOWS) {
 			fileEncoding = "GBK";
 			cmdStr = String.format("ping -n %s -w 1 %s", times, host);
 		} else {
@@ -55,7 +61,7 @@ public class PingUtil {
 		String ttl =  "";
 		String avgTime =  "";
 		
-		if (isWindows) {
+		if (IS_WINDOWS) {
 			packetLoss = ExecuteShellComand.findValue(rs, WINDOWS_PACKET_LOSS_PATTERN);
 			ttl = ExecuteShellComand.findValue(rs, WINDOWS_TTL_PATTERN);
 			avgTime = ExecuteShellComand.findValue(rs, WINDOWS_PING_PATTERN);
@@ -70,10 +76,6 @@ public class PingUtil {
 		int ttlNum = Integer.valueOf("".equals(ttl) ? "1000" : ttl).intValue();
 		
 		return new PingResult(host, Double.valueOf(avgTime).doubleValue(), getRouteNum(ttlNum), Double.valueOf("".equals(packetLoss) ? "100" : packetLoss).doubleValue());
-	}
-	
-	private static boolean isWindows() {
-		return System.getProperty("os.name").toLowerCase().contains("windows");
 	}
 	
 	private static int getRouteNum(int ttl) {
