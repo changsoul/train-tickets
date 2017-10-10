@@ -68,7 +68,6 @@ public class UserInfo {
 		this.futures = new ArrayList<ScheduledFuture<?>>();
 		cancelAllScheduled();
 		this.context = HttpClientContext.create();
-//		Request.setLoadBalancingCookie(this.context);
 	}
 
 	public String getName() {

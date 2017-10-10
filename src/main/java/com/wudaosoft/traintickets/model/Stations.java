@@ -31,6 +31,14 @@ public class Stations {
 	
 	private static final List<String> stations = new ArrayList<String>(2800);
 	
+	static { 
+		try {
+			FileUtil.readLine(stations, Stations.class.getResourceAsStream("/station_name.txxt"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private String code;
 	
 	private String name;
@@ -66,14 +74,6 @@ public class Stations {
 		super();
 		this.code = code;
 		this.name = name;
-	}
-
-	static { 
-		try {
-			FileUtil.readLine(stations, Stations.class.getResourceAsStream("/station_name.txxt"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public static List<Stations> search (String key) {

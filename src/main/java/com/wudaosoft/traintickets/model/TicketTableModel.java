@@ -13,32 +13,30 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.wudaosoft.traintickets.form;
+package com.wudaosoft.traintickets.model;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import com.wudaosoft.traintickets.model.UserInfo;
-
 /**
  * @author changsoul.wu
  *
  */
 @SuppressWarnings("serial")
-public class UserTableModel extends AbstractTableModel {
+public class TicketTableModel extends AbstractTableModel {
 
 	private List<UserInfo> users;
 
-	public UserTableModel() {
+	public TicketTableModel() {
 		this.users = new LinkedList<UserInfo>();
 	}
 
 	/**
 	 * @param users
 	 */
-	public UserTableModel(List<UserInfo> users) {
+	public TicketTableModel(List<UserInfo> users) {
 		this.users = users;
 	}
 

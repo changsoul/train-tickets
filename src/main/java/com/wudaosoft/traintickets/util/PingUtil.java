@@ -91,6 +91,6 @@ public class PingUtil {
 	
 	public static void main(String[] args) {
 		
-		System.out.println(ping("14.18.201.47", 1));
+		System.out.println(ping("14.18.201.47", 4));
 	}
 }

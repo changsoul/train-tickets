@@ -15,6 +15,8 @@
  */
 package com.wudaosoft.traintickets.form;
 
+import java.applet.Applet;
+import java.applet.AudioClip;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Frame;
@@ -55,6 +57,8 @@ public class CaptchaForm extends JDialog {
 	private Action action = Action.getInstance();
 
 	private CaptchaView captchaView;
+	
+	private AudioClip noteMusic;
 
 	public CaptchaForm(Frame owner, UserInfo user, boolean modal) throws HeadlessException {
 		super(owner, modal);
@@ -72,6 +76,9 @@ public class CaptchaForm extends JDialog {
 			public void windowOpened(WindowEvent e) {
 				super.windowOpened(e);
 				refeshCheckImage();
+				
+				noteMusic = Applet.newAudioClip(this.getClass().getResource("/message.wav"));
+		        noteMusic.play();
 			}
 		});
 
