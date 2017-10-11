@@ -15,6 +15,10 @@
  */
 package com.wudaosoft.traintickets.model;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.List;
+
 /**
  * @author Changsoul Wu
  * 
@@ -36,7 +40,12 @@ public class TicketRow {
 	}
 
 	public void setSecretStr(String secretStr) {
-		this.secretStr = secretStr;
+		if(secretStr == null)
+			return;
+		try {
+			this.secretStr = URLDecoder.decode(secretStr, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+		}
 	}
 
 	public String getButtonTextInfo() {
@@ -104,6 +113,12 @@ public class TicketRow {
 		ins.setSrrbNum(cells[33]);
 		ins.setYpEx(cells[34]);
 		ins.setSeatTypes(cells[35]);
+		
+		List<Stations> fStations = Stations.search(cells[6]);
+		List<Stations> tStations = Stations.search(cells[7]);
+		
+		ins.setFromStationName(fStations.isEmpty() ? "" : fStations.get(0).getName());
+		ins.setToStationName(tStations.isEmpty() ? "" : tStations.get(0).getName());
 		
 		tRow.setSecretStr(cells[0]);
 		tRow.setButtonTextInfo(cells[1]);

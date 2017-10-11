@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.wudaosoft.traintickets.cons.ApiCons;
@@ -56,6 +57,7 @@ import com.wudaosoft.traintickets.exception.ServiceException;
 import com.wudaosoft.traintickets.form.MainForm;
 import com.wudaosoft.traintickets.form.MyButton;
 import com.wudaosoft.traintickets.model.ApplyStatus;
+import com.wudaosoft.traintickets.model.TicketRow;
 import com.wudaosoft.traintickets.model.UserInfo;
 import com.wudaosoft.traintickets.net.CookieUtil;
 import com.wudaosoft.traintickets.net.HostConfig;
@@ -429,6 +431,55 @@ public class Action {
 			}
 		}, 1000, 5000, TimeUnit.MILLISECONDS);
 	}
+	
+	public JSONObject queryTicketPrice(String trainNo, String fromStationNo, String toStationNo, String seatTypes, String trainDate, UserInfo userInfo) throws Exception {
+		Map<String, String> params = new LinkedHashMap<String, String>();
+		params.put("train_no", trainNo);
+		params.put("from_station_no", fromStationNo);
+		params.put("to_station_no", toStationNo);
+		params.put("seat_types", seatTypes);
+		params.put("train_date", trainDate);
+		
+		return request.getAjax(hostConfig.getHostUrl(), ApiCons.QUERY_TICKET_PRICE_AJAX, userInfo.getContext()).getJSONObject("data");
+	}
+	
+	public void queryLeftTicket(String trainNo, String fromStationNo, String toStationNo, String seatTypes, String trainDate, UserInfo userInfo) throws Exception {
+		Map<String, String> params = new LinkedHashMap<String, String>();
+		params.put("train_no", trainNo);
+		params.put("from_station_no", fromStationNo);
+		params.put("to_station_no", toStationNo);
+		params.put("seat_types", seatTypes);
+		params.put("train_date", trainDate);
+		
+		JSONObject rs = request.getAjax(hostConfig.getHostUrl(), ApiCons.QUERY_LEFTTICKET_AJAX, userInfo.getContext());
+		
+		String messages = rs.getString("messages");
+		if(!"[]".equals(messages))
+			throw new ServiceException(messages);
+		
+		JSONObject data = rs.getJSONObject("data");
+		
+		if(data == null)
+			return;
+		
+		JSONArray result = data.getJSONArray("result");
+		
+		if(result.isEmpty())
+			return;
+		
+		String[] rows = new String[result.size()];
+		result.toArray(rows);
+		
+		List<TicketRow>  rowList = new ArrayList<TicketRow>(rows.length);
+		
+		for(String r : rows) {
+			rowList.add(TicketRow.fromData(r));
+		}
+		
+		
+		
+	}
+	
 
 	/**
 	 * 核心！ 设置并添加“提交申请”任务，可人工结束线程。

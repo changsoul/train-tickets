@@ -43,4 +43,8 @@ public class ApiCons {
 	
 	public static final String CAPTCHA_CHECK_AJAX = "/passport/captcha/captcha-check";
 	
+	public static final String QUERY_LEFTTICKET_AJAX = "/otn/leftTicket/query";
+	
+	public static final String QUERY_TICKET_PRICE_AJAX = "/otn/leftTicket/queryTicketPrice";
+	
 }

@@ -16,6 +16,8 @@
 package com.wudaosoft.traintickets.model;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
 /**
  * @author Changsoul Wu
@@ -43,7 +45,7 @@ public class TrainInfo implements Serializable {
 	private String toStationNo;
 	private String isSupportCard;
 	private String controlledTrainFlag;
-	private String ggNum;
+	private String ggNum; //
 	private String grNum;
 	private String qtNum;
 	private String rwNum;
@@ -151,7 +153,12 @@ public class TrainInfo implements Serializable {
 	}
 
 	public void setYpInfo(String ypInfo) {
-		this.ypInfo = ypInfo;
+		if(ypInfo == null)
+			return;
+		try {
+			this.ypInfo = URLDecoder.decode(ypInfo, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+		}
 	}
 
 	public String getStartTrainDate() {

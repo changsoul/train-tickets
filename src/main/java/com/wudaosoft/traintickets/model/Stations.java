@@ -33,7 +33,7 @@ public class Stations {
 	
 	static { 
 		try {
-			FileUtil.readLine(stations, Stations.class.getResourceAsStream("/station_name.txxt"));
+			FileUtil.readLine(stations, Stations.class.getResourceAsStream("/station_name.txt"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -74,6 +74,11 @@ public class Stations {
 		super();
 		this.code = code;
 		this.name = name;
+	}
+
+	@Override
+	public String toString() {
+		return "Stations [code=" + code + ", name=" + name + "]";
 	}
 
 	public static List<Stations> search (String key) {
