@@ -36,14 +36,14 @@ public class TrainInfo implements Serializable {
 	private String startTime;
 	private String arriveTime;
 	private String lishi;
-	private String canWebBuy;
+	private boolean canWebBuy;
 	private String ypInfo;
 	private String startTrainDate;
 	private String trainSeatFeature;
 	private String locationCode;
 	private String fromStationNo;
 	private String toStationNo;
-	private String isSupportCard;
+	private boolean isSupportCard;
 	private String controlledTrainFlag;
 	private String ggNum; //
 	private String grNum;
@@ -140,11 +140,11 @@ public class TrainInfo implements Serializable {
 		this.lishi = lishi;
 	}
 
-	public String getCanWebBuy() {
+	public boolean getCanWebBuy() {
 		return canWebBuy;
 	}
 
-	public void setCanWebBuy(String canWebBuy) {
+	public void setCanWebBuy(boolean canWebBuy) {
 		this.canWebBuy = canWebBuy;
 	}
 
@@ -201,11 +201,11 @@ public class TrainInfo implements Serializable {
 		this.toStationNo = toStationNo;
 	}
 
-	public String getIsSupportCard() {
+	public boolean getIsSupportCard() {
 		return isSupportCard;
 	}
 
-	public void setIsSupportCard(String isSupportCard) {
+	public void setIsSupportCard(boolean isSupportCard) {
 		this.isSupportCard = isSupportCard;
 	}
 

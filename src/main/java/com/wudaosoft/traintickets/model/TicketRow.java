@@ -88,14 +88,14 @@ public class TicketRow {
 		ins.setStartTime(cells[8]);
 		ins.setArriveTime(cells[9]);
 		ins.setLishi(cells[10]);
-		ins.setCanWebBuy(cells[11]);
+		ins.setCanWebBuy("Y".equals(cells[11]));
 		ins.setYpInfo(cells[12]);
 		ins.setStartTrainDate(cells[13]);
 		ins.setTrainSeatFeature(cells[14]);
 		ins.setLocationCode(cells[15]);
 		ins.setFromStationNo(cells[16]);
 		ins.setToStationNo(cells[17]);
-		ins.setIsSupportCard(cells[18]);
+		ins.setIsSupportCard(!"0".equals(cells[18]));
 		ins.setControlledTrainFlag(cells[19]);
 		ins.setGgNum(cells[20]);
 		ins.setGrNum(cells[21]);
