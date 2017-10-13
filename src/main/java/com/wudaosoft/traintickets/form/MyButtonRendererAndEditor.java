@@ -27,7 +27,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellRenderer;
 
-import com.wudaosoft.traintickets.model.TicketTableModel;
+import com.wudaosoft.traintickets.model.TrainInfoTableModel;
 
 /**
  * @author changsoul.wu
@@ -92,7 +92,7 @@ public class MyButtonRendererAndEditor extends DefaultCellEditor implements Tabl
 				button = new MyButton(text);
 				button.setRow(row);
 				button.setColumn(column);
-				button.setUserInfo(((TicketTableModel)table.getModel()).getUserInfo(row));
+				button.setUserInfo(((TrainInfoTableModel)table.getModel()).getUserInfo(row));
 				button.addActionListener(this);
 				buttons.put(key, button);
 			}

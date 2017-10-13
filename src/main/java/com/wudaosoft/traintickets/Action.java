@@ -57,7 +57,7 @@ import com.wudaosoft.traintickets.exception.ServiceException;
 import com.wudaosoft.traintickets.form.MainForm;
 import com.wudaosoft.traintickets.form.MyButton;
 import com.wudaosoft.traintickets.model.ApplyStatus;
-import com.wudaosoft.traintickets.model.TicketRow;
+import com.wudaosoft.traintickets.model.TrainInfoRow;
 import com.wudaosoft.traintickets.model.UserInfo;
 import com.wudaosoft.traintickets.net.CookieUtil;
 import com.wudaosoft.traintickets.net.HostConfig;
@@ -470,10 +470,10 @@ public class Action {
 		String[] rows = new String[result.size()];
 		result.toArray(rows);
 		
-		List<TicketRow>  rowList = new ArrayList<TicketRow>(rows.length);
+		List<TrainInfoRow>  rowList = new ArrayList<TrainInfoRow>(rows.length);
 		
 		for(String r : rows) {
-			rowList.add(TicketRow.fromData(r));
+			rowList.add(TrainInfoRow.fromData(r));
 		}
 		
 		

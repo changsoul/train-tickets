@@ -25,7 +25,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 
 import com.wudaosoft.traintickets.Action;
-import com.wudaosoft.traintickets.model.TicketTableModel;
+import com.wudaosoft.traintickets.model.TrainInfoTableModel;
 
 /** 
  * @author Changsoul Wu
@@ -49,7 +49,7 @@ public class TicketsPanel extends JPanel{
 
 	private StringBuffer msgBuffer;
 	
-	private TicketTableModel ticketModel;
+	private TrainInfoTableModel ticketModel;
 	
 	private StatusBar statusBar;
 	

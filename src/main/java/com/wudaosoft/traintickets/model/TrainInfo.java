@@ -225,6 +225,10 @@ public class TrainInfo implements Serializable {
 		this.ggNum = !"".equals(ggNum) ? ggNum : "--";
 	}
 
+	/**
+	 * 高级软卧
+	 * @return
+	 */
 	public String getGrNum() {
 		return grNum;
 	}
@@ -233,6 +237,10 @@ public class TrainInfo implements Serializable {
 		this.grNum = !"".equals(grNum) ? grNum : "--";
 	}
 
+	/**
+	 * 其他座位
+	 * @return
+	 */
 	public String getQtNum() {
 		return qtNum;
 	}
@@ -241,6 +249,10 @@ public class TrainInfo implements Serializable {
 		this.qtNum = !"".equals(qtNum) ? qtNum : "--";
 	}
 
+	/**
+	 * 软卧
+	 * @return
+	 */
 	public String getRwNum() {
 		return rwNum;
 	}
@@ -249,6 +261,10 @@ public class TrainInfo implements Serializable {
 		this.rwNum = !"".equals(rwNum) ? rwNum : "--";
 	}
 
+	/**
+	 * 软座
+	 * @return
+	 */
 	public String getRzNum() {
 		return rzNum;
 	}
@@ -257,6 +273,10 @@ public class TrainInfo implements Serializable {
 		this.rzNum = !"".equals(rzNum) ? rzNum : "--";
 	}
 
+	/**
+	 * 特等座
+	 * @return
+	 */
 	public String getTzNum() {
 		return tzNum;
 	}
@@ -265,6 +285,10 @@ public class TrainInfo implements Serializable {
 		this.tzNum = !"".equals(tzNum) ? tzNum : "--";
 	}
 
+	/**
+	 * 无座
+	 * @return
+	 */
 	public String getWzNum() {
 		return wzNum;
 	}
@@ -272,7 +296,7 @@ public class TrainInfo implements Serializable {
 	public void setWzNum(String wzNum) {
 		this.wzNum = !"".equals(wzNum) ? wzNum : "--";
 	}
-
+	
 	public String getYbNum() {
 		return ybNum;
 	}
@@ -281,6 +305,10 @@ public class TrainInfo implements Serializable {
 		this.ybNum = !"".equals(ybNum) ? ybNum : "--";
 	}
 
+	/**
+	 * 硬卧
+	 * @return
+	 */
 	public String getYwNum() {
 		return ywNum;
 	}
@@ -289,6 +317,10 @@ public class TrainInfo implements Serializable {
 		this.ywNum = !"".equals(ywNum) ? ywNum : "--";
 	}
 
+	/**
+	 * 硬坐
+	 * @return
+	 */
 	public String getYzNum() {
 		return yzNum;
 	}
@@ -297,6 +329,10 @@ public class TrainInfo implements Serializable {
 		this.yzNum = !"".equals(yzNum) ? yzNum : "--";
 	}
 
+	/**
+	 * 二等坐
+	 * @return
+	 */
 	public String getZeNum() {
 		return zeNum;
 	}
@@ -305,6 +341,10 @@ public class TrainInfo implements Serializable {
 		this.zeNum = !"".equals(zeNum) ? zeNum : "--";
 	}
 
+	/**
+	 * 一等坐
+	 * @return
+	 */
 	public String getZyNum() {
 		return zyNum;
 	}
@@ -313,6 +353,10 @@ public class TrainInfo implements Serializable {
 		this.zyNum = !"".equals(zyNum) ? zyNum : "--";
 	}
 
+	/**
+	 * 商务坐
+	 * @return
+	 */
 	public String getSwzNum() {
 		return swzNum;
 	}
@@ -321,6 +365,10 @@ public class TrainInfo implements Serializable {
 		this.swzNum = !"".equals(swzNum) ? swzNum : "--";
 	}
 
+	/**
+	 * 动卧
+	 * @return
+	 */
 	public String getSrrbNum() {
 		return srrbNum;
 	}
@@ -337,6 +385,10 @@ public class TrainInfo implements Serializable {
 		this.ypEx = ypEx;
 	}
 
+	/**
+	 * 座位类型
+	 * @return
+	 */
 	public String getSeatTypes() {
 		return seatTypes;
 	}

@@ -23,7 +23,7 @@ import java.util.List;
  * @author Changsoul Wu
  * 
  */
-public class TicketRow {
+public class TrainInfoRow {
 
 	private String secretStr;
 
@@ -31,7 +31,7 @@ public class TicketRow {
 
 	private TrainInfo queryLeftNewDTO;
 
-	public TicketRow() {
+	public TrainInfoRow() {
 		super();
 	}
 
@@ -70,13 +70,13 @@ public class TicketRow {
 				+ queryLeftNewDTO + "]";
 	}
 
-	public static TicketRow fromData(String row) {
+	public static TrainInfoRow fromData(String row) {
 		
 		String[] cells = row.split("\\|");
 		if(cells.length < 35)
 			return null;
 		
-		TicketRow tRow = new TicketRow();
+		TrainInfoRow tRow = new TrainInfoRow();
 		TrainInfo ins = new TrainInfo();
 		
 		ins.setTrainNo(cells[2]);

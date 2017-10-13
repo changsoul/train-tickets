@@ -54,7 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wudaosoft.traintickets.Action;
-import com.wudaosoft.traintickets.model.TicketTableModel;
+import com.wudaosoft.traintickets.model.TrainInfoTableModel;
 import com.wudaosoft.traintickets.model.UserInfo;
 import com.wudaosoft.traintickets.util.DateUtil;
 import com.wudaosoft.traintickets.util.ExtensionFileFilter;
@@ -90,7 +90,7 @@ public class MainForm3 extends JFrame {
 
 	private StringBuffer msgBuffer;
 	
-	private TicketTableModel userModel;
+	private TrainInfoTableModel userModel;
 
 	public MainForm3() throws HeadlessException {
 		super();
@@ -197,7 +197,7 @@ public class MainForm3 extends JFrame {
 
 	protected void setLeftPanel(JSplitPane splitPane) {
 
-		userModel = new TicketTableModel();
+		userModel = new TrainInfoTableModel();
 
 		loginTable = new JTable(userModel); // 创建一个列表框
 		loginTable.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);// 一次只能选择一个列表索引
@@ -474,7 +474,7 @@ public class MainForm3 extends JFrame {
 	}
 	
 	public void disableAllButton(UserInfo user) {
-		int row = ((TicketTableModel)loginTable.getModel()).getRowNumber(user);
+		int row = ((TrainInfoTableModel)loginTable.getModel()).getRowNumber(user);
 		if(row == -1)
 			return;
 		
