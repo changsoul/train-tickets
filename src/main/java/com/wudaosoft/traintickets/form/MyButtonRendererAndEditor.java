@@ -82,6 +82,7 @@ public class MyButtonRendererAndEditor extends DefaultCellEditor implements Tabl
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		event.invoke(e);
+		fireEditingStopped();
 	}
 
 	private JButton getButton(JTable table, int row, int column) {
@@ -92,7 +93,7 @@ public class MyButtonRendererAndEditor extends DefaultCellEditor implements Tabl
 				button = new MyButton(text);
 				button.setRow(row);
 				button.setColumn(column);
-				button.setUserInfo(((TrainInfoTableModel)table.getModel()).getUserInfo(row));
+				button.setTrainInfoRow(((TrainInfoTableModel)table.getModel()).getTrainInfoRow(row));
 				button.addActionListener(this);
 				buttons.put(key, button);
 			}

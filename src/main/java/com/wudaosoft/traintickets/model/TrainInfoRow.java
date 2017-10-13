@@ -40,6 +40,7 @@ public class TrainInfoRow {
 	}
 
 	public void setSecretStr(String secretStr) {
+//		this.secretStr = secretStr;
 		if(secretStr == null)
 			return;
 		try {

@@ -26,7 +26,7 @@ import java.net.URLDecoder;
 public class TrainInfo implements Serializable {
 
 	private static final long serialVersionUID = -1745101650429943460L;
-	
+
 	private String trainNo;
 	private String stationTrainCode;
 	private String startStationTelecode;
@@ -45,7 +45,7 @@ public class TrainInfo implements Serializable {
 	private String toStationNo;
 	private boolean isSupportCard;
 	private String controlledTrainFlag;
-	private String ggNum; //
+	private String ggNum;
 	private String grNum;
 	private String qtNum;
 	private String rwNum;
@@ -153,7 +153,8 @@ public class TrainInfo implements Serializable {
 	}
 
 	public void setYpInfo(String ypInfo) {
-		if(ypInfo == null)
+//		this.ypInfo = ypInfo;
+		if (ypInfo == null)
 			return;
 		try {
 			this.ypInfo = URLDecoder.decode(ypInfo, "UTF-8");
@@ -227,6 +228,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 高级软卧
+	 * 
 	 * @return
 	 */
 	public String getGrNum() {
@@ -239,6 +241,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 其他座位
+	 * 
 	 * @return
 	 */
 	public String getQtNum() {
@@ -251,6 +254,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 软卧
+	 * 
 	 * @return
 	 */
 	public String getRwNum() {
@@ -263,6 +267,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 软座
+	 * 
 	 * @return
 	 */
 	public String getRzNum() {
@@ -275,6 +280,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 特等座
+	 * 
 	 * @return
 	 */
 	public String getTzNum() {
@@ -287,6 +293,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 无座
+	 * 
 	 * @return
 	 */
 	public String getWzNum() {
@@ -296,7 +303,7 @@ public class TrainInfo implements Serializable {
 	public void setWzNum(String wzNum) {
 		this.wzNum = !"".equals(wzNum) ? wzNum : "--";
 	}
-	
+
 	public String getYbNum() {
 		return ybNum;
 	}
@@ -307,6 +314,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 硬卧
+	 * 
 	 * @return
 	 */
 	public String getYwNum() {
@@ -319,6 +327,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 硬坐
+	 * 
 	 * @return
 	 */
 	public String getYzNum() {
@@ -331,6 +340,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 二等坐
+	 * 
 	 * @return
 	 */
 	public String getZeNum() {
@@ -343,6 +353,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 一等坐
+	 * 
 	 * @return
 	 */
 	public String getZyNum() {
@@ -355,6 +366,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 商务坐
+	 * 
 	 * @return
 	 */
 	public String getSwzNum() {
@@ -367,6 +379,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 动卧
+	 * 
 	 * @return
 	 */
 	public String getSrrbNum() {
@@ -387,6 +400,7 @@ public class TrainInfo implements Serializable {
 
 	/**
 	 * 座位类型
+	 * 
 	 * @return
 	 */
 	public String getSeatTypes() {

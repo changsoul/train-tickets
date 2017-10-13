@@ -17,7 +17,7 @@ package com.wudaosoft.traintickets.form;
 
 import javax.swing.JButton;
 
-import com.wudaosoft.traintickets.model.UserInfo;
+import com.wudaosoft.traintickets.model.TrainInfoRow;
 
 /**
  * @author changsoul.wu
@@ -30,7 +30,7 @@ public class MyButton extends JButton {
 
 	private int column;
 	
-	private UserInfo userInfo;
+	private TrainInfoRow trainInfoRow;
 
 	public int getRow() {
 		return row;
@@ -48,12 +48,12 @@ public class MyButton extends JButton {
 		this.column = column;
 	}
 
-	public UserInfo getUserInfo() {
-		return userInfo;
+	public TrainInfoRow getTrainInfoRow() {
+		return trainInfoRow;
 	}
 
-	public void setUserInfo(UserInfo userInfo) {
-		this.userInfo = userInfo;
+	public void setTrainInfoRow(TrainInfoRow trainInfoRow) {
+		this.trainInfoRow = trainInfoRow;
 	}
 
 	public MyButton() {

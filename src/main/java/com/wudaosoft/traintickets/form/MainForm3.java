@@ -357,12 +357,12 @@ public class MainForm3 extends JFrame {
 	protected void grabSingleBuzu(MyButton button) {
 		try {
 			
-			if(!button.getUserInfo().getIsLogin()) {
-				JOptionPane.showMessageDialog(this, "请先登录！");
-				return;
-			}
-			
-			action.applyOnece(button.getUserInfo());
+//			if(!button.getUserInfo().getIsLogin()) {
+//				JOptionPane.showMessageDialog(this, "请先登录！");
+//				return;
+//			}
+//			
+//			action.applyOnece(button.getUserInfo());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -474,11 +474,11 @@ public class MainForm3 extends JFrame {
 	}
 	
 	public void disableAllButton(UserInfo user) {
-		int row = ((TrainInfoTableModel)loginTable.getModel()).getRowNumber(user);
-		if(row == -1)
-			return;
-		
-		getTableButton(row, 4).setEnabled(false);
-		getTableButton(row, 5).setEnabled(false);
+//		int row = ((TrainInfoTableModel)loginTable.getModel()).getRowNumber(user);
+//		if(row == -1)
+//			return;
+//		
+//		getTableButton(row, 4).setEnabled(false);
+//		getTableButton(row, 5).setEnabled(false);
 	}
 }

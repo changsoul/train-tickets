@@ -49,7 +49,8 @@ public class TrainInfoTableModel extends AbstractTableModel {
 		this.trainInfoRows.add(trainInfoRows);
 	}
 
-	public void AddAllTrainInfoRow(List<TrainInfoRow> trainInfoRows) {
+	public void setTrainInfoRow(List<TrainInfoRow> trainInfoRows) {
+		this.trainInfoRows.clear();
 		this.trainInfoRows.addAll(trainInfoRows);
 	}
 
@@ -76,53 +77,62 @@ public class TrainInfoTableModel extends AbstractTableModel {
 				value = train.getStationTrainCode();
 				break;
 			case 1:
-				value = train.getFromStationNo() + "\n" + train.getToStationName();
+				value = train.getFromStationName() + " - " + train.getToStationName();
 				break;
 			case 2:
-				value = train.getStartTime() + "\n" + train.getArriveTime();
+				value = train.getStartTime() + " - " + train.getArriveTime();
 				break;
 			case 3:
 				value = train.getLishi();
 				break;
 			case 4:
-				value = train.getArriveTime();
+				if (!"--".equals(train.getSwzNum()) && !"0".equals(train.getSwzNum()) && !"无".equals(train.getSwzNum())) {
+	                value = getTicketNum(train, train.getSwzNum(), "SWZ_", "91");
+	            } else {
+	                if (!"--".equals(train.getTzNum()) && !"0".equals(train.getTzNum()) && !"无".equals(train.getTzNum())) {
+	                    value = getTicketNum(train, train.getTzNum(), "TZ_", "P1");
+	                } else {
+	                    if ("无".equals(train.getSwzNum())) {
+	                        value = getTicketNum(train, train.getSwzNum(), "SWZ_", "91");
+	                    } else {
+	                        value = getTicketNum(train, train.getTzNum(), "TZ_", "P1");
+	                    }
+	                }
+	            }
 				break;
 			case 5:
-				value = train.getLishi();
+				value = getTicketNum(train, train.getZyNum(), "ZY_", "M1");
 				break;
 			case 6:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getZeNum(), "ZE_", "O1");
 				break;
 			case 7:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getGrNum(), "GR_", "61");
 				break;
 			case 8:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getRwNum(), "RW_", "41");
 				break;
 			case 9:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getSrrbNum(), "SRRB_", "F1");
 				break;
 			case 10:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getYwNum(), "YW_", "31");
 				break;
 			case 11:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getRzNum(), "RZ_", "21");
 				break;
 			case 12:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getYzNum(), "YZ_", "11");
 				break;
 			case 13:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getWzNum(), "WZ_", "W1");
 				break;
 			case 14:
-				value = train.getStationTrainCode();
+				value = getTicketNum(train, train.getQtNum(), "QT_", "");
 				break;
-			case 15:
-				value = train.getStationTrainCode();
-				break;
-			case 16:
-				value = rowInfo.getButtonTextInfo();
-				break;
+//			case 15:
+//				value = rowInfo.getButtonTextInfo();
+//				break;
 			default:
 				break;
 		}
@@ -137,12 +147,12 @@ public class TrainInfoTableModel extends AbstractTableModel {
 
 	@Override
 	public int getColumnCount() {
-		return 6;
+		return 17;
 	}
 
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		return (columnIndex == 4 || columnIndex == 5) ? true : false;
+		return (columnIndex == 15 || columnIndex == 16) ? true : false;
 	}
 
 	@Override
@@ -159,6 +169,13 @@ public class TrainInfoTableModel extends AbstractTableModel {
 		String co = train.getYpEx() != null ? train.getYpEx().replace("F", "4").replace("A", "6") : null;
 		String cp = train.getControlledTrainFlag();
 		int ct = co != null ? co.indexOf(cu) : -1;
+		int cnNum = 0;
+		
+		try {
+			cnNum = Integer.parseInt(cn);
+		} catch (NumberFormatException e) {
+		}
+		
         boolean cs = false;
         
         if (ct > -1 && (ct % 2) == 0) {
@@ -166,92 +183,50 @@ public class TrainInfoTableModel extends AbstractTableModel {
         }
         
         if ("1".equals(cp) || "2".equals(cp)) {
-            cq.push(' <td width="46" align="center" style="cursor: pointer;"  id="');
-            cq.push(cv);
-            cq.push(cr);
-            cq.push('">');
-            cq.push(cn);
-            cq.push("</td>")
+           return cn;
         } else {
             if ("有".equals(cn)) {
                 if (cv.equals("SWZ_") || cv.equals("TZ_")) {
-                    cq.push('<td width="46" align="center" class="yes" onclick="showTicketPrice(this)"　style="cursor: pointer;" id="');
-                    cq.push(cv);
-                    cq.push(cr);
-                    cq.push('">');
                     if (cs) {
-                        cq.push('<div class="sale" title="本席别票价打折">' + cn + '<span class="i-mark">折</span></div>')
+                        return cnNum + "折";
                     } else {
-                        cq.push(cn)
+                    	return cn;
                     }
-                    cq.push("</td>")
                 } else {
                     if (cv.equals("ZY_") || cv.equals("ZE_")) {
-                        cq.push('<td width="46" align="center" class="yes" style="cursor: pointer;" onclick="showTicketPrice(this)" id="');
-                        cq.push(cv);
-                        cq.push(cr);
-                        cq.push('">');
-                        if (cs) {
-                            cq.push('<div class="sale" title="本席别票价打折">' + cn + '<span class="i-mark">折</span></div>')
+                    	if (cs) {
+                            return cnNum + "折";
                         } else {
-                            cq.push(cn)
+                        	return cn;
                         }
-                        cq.push("</td>")
                     } else {
-                        cq.push('<td width="46" align="center" style="cursor: pointer;" class="yes" onclick="showTicketPrice(this)" id="');
-                        cq.push(cv);
-                        cq.push(cr);
-                        cq.push('">');
-                        if (cs) {
-                            cq.push('<div class="sale" title="本席别票价打折">' + cn + '<span class="i-mark">折</span></div>')
+                    	if (cs) {
+                            return cnNum + "折";
                         } else {
-                            cq.push(cn)
+                        	return cn;
                         }
-                        cq.push("</td>")
                     }
                 }
             } else {
-                if (cn.equals("无") || isNum(cn) >= 0) {
-                    String cm = ' class="t-num" ';
-                    if (cn.equals("无") || isNum(cn).equals(0) {
-                        cm = ""
-                    }
-                    if (cv.equals("SWZ_" || cv.equals("TZ_" || cv.equals("ZY_" || cv.equals("ZE_") {
-                        cq.push('<td width="46" align="center" style="cursor: pointer;" ' + cm + ' onclick="showTicketPrice(this)" id="');
-                        cq.push(cv);
-                        cq.push(cr);
-                        cq.push('">');
-                        cq.push("<div>");
-                        if (cs) {
-                            cq.push('<div class="sale" title="本席别票价打折">' + cn + '<span class="i-mark">折</span></div>')
+                if (cn.equals("无") || cnNum >= 0) {
+                    if (cv.equals("SWZ_") || cv.equals("TZ_") || cv.equals("ZY_") || cv.equals("ZE_")) {
+                    	if (cs) {
+                            return cnNum + "折";
                         } else {
-                            cq.push(cn)
+                        	return cn;
                         }
-                        cq.push("</td>")
                     } else {
-                        cq.push('<td width="46" align="center" style="cursor: pointer;" ' + cm + ' onclick="showTicketPrice(this)" id="');
-                        cq.push(cv);
-                        cq.push(cr);
-                        cq.push('">');
-                        if (cs) {
-                            cq.push('<div class="sale" title="本席别票价打折">' + cn + '<span class="i-mark">折</span></div>')
+                    	if (cs) {
+                            return cnNum + "折";
                         } else {
-                            cq.push(cn)
+                        	return cn;
                         }
-                        cq.push("</td>")
                     }
                 } else {
-                    cq.push(' <td width="46" align="center" style="cursor: pointer;" onclick="showTicketPrice(this)"  id="');
-                    cq.push(cv);
-                    cq.push(cr);
-                    cq.push('">');
-                    cq.push(cn);
-                    cq.push("</td>")
+                    return cn;
                 }
             }
         }
-		
-		return null;
 	}
 	
 	private void init() {
@@ -270,6 +245,7 @@ public class TrainInfoTableModel extends AbstractTableModel {
 		culomnNames.add("硬座");
 		culomnNames.add("无座");
 		culomnNames.add("其他");
+		culomnNames.add("票价");
 		culomnNames.add("备注");
 	}
 
