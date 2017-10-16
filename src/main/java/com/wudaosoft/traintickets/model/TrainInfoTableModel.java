@@ -168,9 +168,9 @@ public class TrainInfoTableModel extends AbstractTableModel {
 	private Object getTicketNum(TrainInfo train, String cn, String cv, String cu) {
 		String co = train.getYpEx() != null ? train.getYpEx().replace("F", "4").replace("A", "6") : null;
 		String cp = train.getControlledTrainFlag();
-		int ct = co != null ? co.indexOf(cu) : -1;
+		int ct = co != null && !"".equals(cu) ? co.indexOf(cu) : -1;
 		int cnNum = 0;
-		
+
 		try {
 			cnNum = Integer.parseInt(cn);
 		} catch (NumberFormatException e) {
@@ -181,7 +181,7 @@ public class TrainInfoTableModel extends AbstractTableModel {
         if (ct > -1 && (ct % 2) == 0) {
             cs = true;
         }
-        
+
         if ("1".equals(cp) || "2".equals(cp)) {
            return cn;
         } else {

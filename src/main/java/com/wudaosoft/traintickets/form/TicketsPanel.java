@@ -16,6 +16,8 @@
 package com.wudaosoft.traintickets.form;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
@@ -34,83 +36,84 @@ import com.wudaosoft.traintickets.Action;
 import com.wudaosoft.traintickets.model.TrainInfoRow;
 import com.wudaosoft.traintickets.model.TrainInfoTableModel;
 
-/** 
+/**
  * @author Changsoul Wu
  * 
  */
-public class TicketsPanel extends JPanel{
+public class TicketsPanel extends JPanel {
 
 	private static final long serialVersionUID = -3275367955942443332L;
-	
+
 	private final Action action = Action.getInstance();
-	
+
 	private JTable trainTable;
-	
+
 	private JButton btnTicket;
 
 	private JTextArea msgTextArea;
 
 	private JScrollPane msgTextPane;
-	
+
 	private JSpinner timeSelector;
 
 	private StringBuffer msgBuffer;
-	
+
 	private TrainInfoTableModel trainModel;
-	
+
 	private JPanel northPane;
 	private JPanel centerhPane;
 	private JPanel southPane;
-	
+
 	public TicketsPanel() {
 		setLayout(new BorderLayout());
-		
-		northPane =new JPanel();
-		centerhPane =new JPanel();
-		southPane=new JPanel();
-		
+
+		northPane = new JPanel();
+		centerhPane = new JPanel();
+		southPane = new JPanel();
+
 		northPane.setLayout(new BorderLayout());
-        centerhPane.setLayout(new BorderLayout());
-        southPane.setLayout(new BorderLayout());
-        
-        initTrainTable();
-        
-        northPane.add(new JButton("asdfasdff"), BorderLayout.CENTER);
-        
-        add(northPane,BorderLayout.NORTH);
-        add(centerhPane, BorderLayout.CENTER);
-        add(southPane,BorderLayout.SOUTH);
+		centerhPane.setLayout(new BorderLayout());
+		southPane.setLayout(new BorderLayout());
+
+		initTrainTable();
+
+		northPane.add(new JButton("asdfasdff"), BorderLayout.CENTER);
+
+		add(northPane, BorderLayout.NORTH);
+		add(centerhPane, BorderLayout.CENTER);
+		add(southPane, BorderLayout.SOUTH);
 	}
-	
+
 	public void initTrainTable() {
 		trainModel = new TrainInfoTableModel();
 
 		trainTable = new JTable(trainModel); // 创建一个列表框
 		trainTable.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);// 一次只能选择一个列表索引
-//		trainTable.setBorder(BorderFactory.createTitledBorder("车次列表"));
+		// trainTable.setBorder(BorderFactory.createTitledBorder("车次列表"));
 		trainTable.setRowHeight(50);
-//		trainTable.setSelectionBackground(UIManager.getColor("Tree.textBackground"));
+		// trainTable.setSelectionBackground(UIManager.getColor("Tree.textBackground"));
 		trainTable.setCellSelectionEnabled(false);
 		trainTable.setColumnSelectionAllowed(false);
 		trainTable.setRowSelectionAllowed(false);
-		DefaultTableCellRenderer tcr = new DefaultTableCellRenderer();// 设置table内容居中  
-        // tcr.setHorizontalAlignment(JLabel.CENTER);  
-        tcr.setHorizontalAlignment(SwingConstants.CENTER);// 这句和上句作用一样  
-        trainTable.setDefaultRenderer(Object.class, tcr);
-        
-        JTableHeader tableHeader = trainTable.getTableHeader();  
-        tableHeader.setReorderingAllowed(false);//表格列不可移动  
-        DefaultTableCellRenderer hr = (DefaultTableCellRenderer) tableHeader  
-                .getDefaultRenderer();  
-        hr.setHorizontalAlignment(DefaultTableCellRenderer.CENTER);//列名居中 
+
+		DefaultTableCellRenderer tcr = new DefaultTableCellRenderer();
+		// tcr.setHorizontalAlignment(JLabel.CENTER);
+		tcr.setHorizontalAlignment(SwingConstants.CENTER);// 设置table内容居中
+		trainTable.setDefaultRenderer(Object.class, tcr);
+
+		JTableHeader tableHeader = trainTable.getTableHeader();
+		tableHeader.setReorderingAllowed(false);// 表格列不可移动
+		tableHeader.setPreferredSize(new Dimension(tableHeader.getWidth(), tableHeader.getHeight() + 30));
+		tableHeader.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+		DefaultTableCellRenderer hr = (DefaultTableCellRenderer) tableHeader.getDefaultRenderer();
+		hr.setHorizontalAlignment(DefaultTableCellRenderer.CENTER);// 列名居中
 
 		MyEvent priceEvent = new MyEvent() {
 			@Override
 			public void invoke(ActionEvent e) {
 				MyButton button = (MyButton) e.getSource();
-				//loginClick(button);
-				
-				
+				// loginClick(button);
+
 			}
 		};
 
@@ -118,7 +121,7 @@ public class TicketsPanel extends JPanel{
 			@Override
 			public void invoke(ActionEvent e) {
 				MyButton button = (MyButton) e.getSource();
-				//grabSingleBuzu(button);
+				// grabSingleBuzu(button);
 			}
 		};
 
@@ -130,6 +133,11 @@ public class TicketsPanel extends JPanel{
 
 		trainTable.getColumnModel().getColumn(16).setCellRenderer(btnBuy);
 		trainTable.getColumnModel().getColumn(16).setCellEditor(btnBuy);
+		
+		trainTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+		trainTable.getColumnModel().getColumn(1).setPreferredWidth(120);
+		trainTable.getColumnModel().getColumn(2).setPreferredWidth(125);
+		trainTable.getColumnModel().getColumn(3).setPreferredWidth(60);
 		
 		centerhPane.add(new JScrollPane(trainTable), BorderLayout.CENTER);
 	}
