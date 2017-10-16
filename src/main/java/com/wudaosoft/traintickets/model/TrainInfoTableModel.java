@@ -168,7 +168,7 @@ public class TrainInfoTableModel extends AbstractTableModel {
 	private Object getTicketNum(TrainInfo train, String cn, String cv, String cu) {
 		String co = train.getYpEx() != null ? train.getYpEx().replace("F", "4").replace("A", "6") : null;
 		String cp = train.getControlledTrainFlag();
-		int ct = co != null && !"".equals(cu) ? co.indexOf(cu) : -1;
+		int ct = (co != null && !"".equals(cu)) ? co.indexOf(cu) : -1;
 		int cnNum = 0;
 
 		try {
@@ -232,9 +232,9 @@ public class TrainInfoTableModel extends AbstractTableModel {
 	private void init() {
 		culomnNames.add("车次");
 		culomnNames.add("出发站/到达站");
-		culomnNames.add("出发时间/到达时间");
+		culomnNames.add("发时/到时");
 		culomnNames.add("历时");
-		culomnNames.add("商务座/特等座");
+		culomnNames.add("商/特座");
 		culomnNames.add("一等座");
 		culomnNames.add("二等座");
 		culomnNames.add("高级软卧");
