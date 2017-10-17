@@ -136,8 +136,8 @@ public class TicketsPanel extends JPanel {
 		
 		trainTable.getColumnModel().getColumn(0).setPreferredWidth(60);
 		trainTable.getColumnModel().getColumn(1).setPreferredWidth(125);
-		trainTable.getColumnModel().getColumn(2).setPreferredWidth(100);
-		trainTable.getColumnModel().getColumn(3).setPreferredWidth(60);
+		trainTable.getColumnModel().getColumn(2).setPreferredWidth(95);
+		trainTable.getColumnModel().getColumn(3).setPreferredWidth(45);
 		
 		centerhPane.add(new JScrollPane(trainTable), BorderLayout.CENTER);
 	}
