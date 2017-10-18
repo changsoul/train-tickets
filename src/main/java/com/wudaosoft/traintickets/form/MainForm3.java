@@ -224,8 +224,8 @@ public class MainForm3 extends JFrame {
 			}
 		};
 
-		MyButtonRendererAndEditor btnLoginRE = new MyButtonRendererAndEditor("登录", e);
-		MyButtonRendererAndEditor btnSumitRE = new MyButtonRendererAndEditor("抢一次", e1);
+		MyButtonRendererAndEditor btnLoginRE = new MyButtonRendererAndEditor("登录", e, "");
+		MyButtonRendererAndEditor btnSumitRE = new MyButtonRendererAndEditor("抢一次", e1, "");
 
 		loginTable.getColumnModel().getColumn(4).setCellRenderer(btnLoginRE);
 		loginTable.getColumnModel().getColumn(4).setCellEditor(btnLoginRE);

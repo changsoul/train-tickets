@@ -67,76 +67,76 @@ public class TrainInfoTableModel extends AbstractTableModel {
 
 		TrainInfoRow rowInfo = trainInfoRows.get(row);
 		TrainInfo train = rowInfo.getQueryLeftNewDTO();
-		if(train == null)
+		if (train == null)
 			return null;
-		
+
 		Object value = null;
-		
+
 		switch (column) {
-			case 0:
-				value = train.getStationTrainCode();
-				break;
-			case 1:
-				value = train.getFromStationName() + " - " + train.getToStationName();
-				break;
-			case 2:
-				value = train.getStartTime() + " - " + train.getArriveTime();
-				break;
-			case 3:
-				value = train.getLishi();
-				break;
-			case 4:
-				if (!"--".equals(train.getSwzNum()) && !"0".equals(train.getSwzNum()) && !"无".equals(train.getSwzNum())) {
-	                value = getTicketNum(train, train.getSwzNum(), "SWZ_", "91");
-	            } else {
-	                if (!"--".equals(train.getTzNum()) && !"0".equals(train.getTzNum()) && !"无".equals(train.getTzNum())) {
-	                    value = getTicketNum(train, train.getTzNum(), "TZ_", "P1");
-	                } else {
-	                    if ("无".equals(train.getSwzNum())) {
-	                        value = getTicketNum(train, train.getSwzNum(), "SWZ_", "91");
-	                    } else {
-	                        value = getTicketNum(train, train.getTzNum(), "TZ_", "P1");
-	                    }
-	                }
-	            }
-				break;
-			case 5:
-				value = getTicketNum(train, train.getZyNum(), "ZY_", "M1");
-				break;
-			case 6:
-				value = getTicketNum(train, train.getZeNum(), "ZE_", "O1");
-				break;
-			case 7:
-				value = getTicketNum(train, train.getGrNum(), "GR_", "61");
-				break;
-			case 8:
-				value = getTicketNum(train, train.getRwNum(), "RW_", "41");
-				break;
-			case 9:
-				value = getTicketNum(train, train.getSrrbNum(), "SRRB_", "F1");
-				break;
-			case 10:
-				value = getTicketNum(train, train.getYwNum(), "YW_", "31");
-				break;
-			case 11:
-				value = getTicketNum(train, train.getRzNum(), "RZ_", "21");
-				break;
-			case 12:
-				value = getTicketNum(train, train.getYzNum(), "YZ_", "11");
-				break;
-			case 13:
-				value = getTicketNum(train, train.getWzNum(), "WZ_", "W1");
-				break;
-			case 14:
-				value = getTicketNum(train, train.getQtNum(), "QT_", "");
-				break;
-//			case 15:
-//				value = rowInfo.getButtonTextInfo();
-//				break;
-			default:
-				break;
+		case 0:
+			value = "<html><span style=\"color:#26a306; font-size:12px; font-weight: 700\">" + train.getStationTrainCode() + "</span></html>";
+			break;
+		case 1:
+			value = train.getFromStationName() + " - " + train.getToStationName();
+			break;
+		case 2:
+			value = train.getStartTime() + " - " + train.getArriveTime();
+			break;
+		case 3:
+			value = train.getLishi();
+			break;
+		case 4:
+			if (!"--".equals(train.getSwzNum()) && !"0".equals(train.getSwzNum()) && !"无".equals(train.getSwzNum())) {
+				value = getCellValue(train, train.getSwzNum(), "SWZ_", "91");
+			} else {
+				if (!"--".equals(train.getTzNum()) && !"0".equals(train.getTzNum()) && !"无".equals(train.getTzNum())) {
+					value = getCellValue(train, train.getTzNum(), "TZ_", "P1");
+				} else {
+					if ("无".equals(train.getSwzNum())) {
+						value = getCellValue(train, train.getSwzNum(), "SWZ_", "91");
+					} else {
+						value = getCellValue(train, train.getTzNum(), "TZ_", "P1");
+					}
+				}
+			}
+			break;
+		case 5:
+			value = getCellValue(train, train.getZyNum(), "ZY_", "M1");
+			break;
+		case 6:
+			value = getCellValue(train, train.getZeNum(), "ZE_", "O1");
+			break;
+		case 7:
+			value = getCellValue(train, train.getGrNum(), "GR_", "61");
+			break;
+		case 8:
+			value = getCellValue(train, train.getRwNum(), "RW_", "41");
+			break;
+		case 9:
+			value = getCellValue(train, train.getSrrbNum(), "SRRB_", "F1");
+			break;
+		case 10:
+			value = getCellValue(train, train.getYwNum(), "YW_", "31");
+			break;
+		case 11:
+			value = getCellValue(train, train.getRzNum(), "RZ_", "21");
+			break;
+		case 12:
+			value = getCellValue(train, train.getYzNum(), "YZ_", "11");
+			break;
+		case 13:
+			value = getCellValue(train, train.getWzNum(), "WZ_", "W1");
+			break;
+		case 14:
+			value = getCellValue(train, train.getQtNum(), "QT_", "");
+			break;
+		// case 15:
+		// value = rowInfo.getButtonTextInfo();
+		// break;
+		default:
+			break;
 		}
-		
+
 		return value;
 	}
 
@@ -158,14 +158,25 @@ public class TrainInfoTableModel extends AbstractTableModel {
 	@Override
 	public String getColumnName(int column) {
 		String name = culomnNames.get(column);
-		
+
 		if (name == null)
 			name = super.getColumnName(column);
 
 		return name;
 	}
+
+	private Object getCellValue(TrainInfo train, String cn, String cv, String cu) {
+		
+		String v = getTicketNum(train, cn, cv, cu);
+		
+		if(hasTickets(v)) {
+			return "<html><span style=\"color:#26a306; font-weight: 700\">" + v + "</span></html>";
+		} else {
+			return v;
+		}
+	}
 	
-	private Object getTicketNum(TrainInfo train, String cn, String cv, String cu) {
+	private String getTicketNum(TrainInfo train, String cn, String cv, String cu) {
 		String co = train.getYpEx() != null ? train.getYpEx().replace("F", "4").replace("A", "6") : null;
 		String cp = train.getControlledTrainFlag();
 		int ct = (co != null && !"".equals(cu)) ? co.indexOf(cu) : -1;
@@ -175,60 +186,60 @@ public class TrainInfoTableModel extends AbstractTableModel {
 			cnNum = Integer.parseInt(cn);
 		} catch (NumberFormatException e) {
 		}
-		
-        boolean cs = false;
-        
-        if (ct > -1 && (ct % 2) == 0) {
-            cs = true;
-        }
 
-        if ("1".equals(cp) || "2".equals(cp)) {
-           return cn;
-        } else {
-            if ("有".equals(cn)) {
-                if (cv.equals("SWZ_") || cv.equals("TZ_")) {
-                    if (cs) {
-                        return cnNum + "折";
-                    } else {
-                    	return cn;
-                    }
-                } else {
-                    if (cv.equals("ZY_") || cv.equals("ZE_")) {
-                    	if (cs) {
-                            return cnNum + "折";
-                        } else {
-                        	return cn;
-                        }
-                    } else {
-                    	if (cs) {
-                            return cnNum + "折";
-                        } else {
-                        	return cn;
-                        }
-                    }
-                }
-            } else {
-                if (cn.equals("无") || cnNum >= 0) {
-                    if (cv.equals("SWZ_") || cv.equals("TZ_") || cv.equals("ZY_") || cv.equals("ZE_")) {
-                    	if (cs) {
-                            return cnNum + "折";
-                        } else {
-                        	return cn;
-                        }
-                    } else {
-                    	if (cs) {
-                            return cnNum + "折";
-                        } else {
-                        	return cn;
-                        }
-                    }
-                } else {
-                    return cn;
-                }
-            }
-        }
+		boolean cs = false;
+
+		if (ct > -1 && (ct % 2) == 0) {
+			cs = true;
+		}
+
+		if ("1".equals(cp) || "2".equals(cp)) {
+			return cn;
+		} else {
+			if ("有".equals(cn)) {
+				if (cv.equals("SWZ_") || cv.equals("TZ_")) {
+					if (cs) {
+						return cnNum + "折";
+					} else {
+						return cn;
+					}
+				} else {
+					if (cv.equals("ZY_") || cv.equals("ZE_")) {
+						if (cs) {
+							return cnNum + "折";
+						} else {
+							return cn;
+						}
+					} else {
+						if (cs) {
+							return cnNum + "折";
+						} else {
+							return cn;
+						}
+					}
+				}
+			} else {
+				if (cn.equals("无") || cnNum >= 0) {
+					if (cv.equals("SWZ_") || cv.equals("TZ_") || cv.equals("ZY_") || cv.equals("ZE_")) {
+						if (cs) {
+							return cnNum + "折";
+						} else {
+							return cn;
+						}
+					} else {
+						if (cs) {
+							return cnNum + "折";
+						} else {
+							return cn;
+						}
+					}
+				} else {
+					return cn;
+				}
+			}
+		}
 	}
-	
+
 	private void init() {
 		culomnNames.add("车次");
 		culomnNames.add("出发站/到达站");
@@ -249,4 +260,16 @@ public class TrainInfoTableModel extends AbstractTableModel {
 		culomnNames.add("备注");
 	}
 
+	private boolean hasTickets(String input) {
+
+		if ("有".equals(input))
+			return true;
+
+		for (int i = 0; i < input.length(); i++) {
+			if (!Character.isDigit(input.charAt(i))) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

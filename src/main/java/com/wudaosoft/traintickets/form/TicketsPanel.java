@@ -90,13 +90,14 @@ public class TicketsPanel extends JPanel {
 		trainTable = new JTable(trainModel); // 创建一个列表框
 		trainTable.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);// 一次只能选择一个列表索引
 		// trainTable.setBorder(BorderFactory.createTitledBorder("车次列表"));
-		trainTable.setRowHeight(50);
+		trainTable.setRowHeight(40);
 		// trainTable.setSelectionBackground(UIManager.getColor("Tree.textBackground"));
 		trainTable.setCellSelectionEnabled(false);
 		trainTable.setColumnSelectionAllowed(false);
 		trainTable.setRowSelectionAllowed(false);
+		trainTable.setGridColor(TrainTableCellRenderer.bd);
 
-		DefaultTableCellRenderer tcr = new DefaultTableCellRenderer();
+		TrainTableCellRenderer tcr = new TrainTableCellRenderer();
 		// tcr.setHorizontalAlignment(JLabel.CENTER);
 		tcr.setHorizontalAlignment(SwingConstants.CENTER);// 设置table内容居中
 		trainTable.setDefaultRenderer(Object.class, tcr);
@@ -125,8 +126,8 @@ public class TicketsPanel extends JPanel {
 			}
 		};
 
-		MyButtonRendererAndEditor btnPrice = new MyButtonRendererAndEditor("票价", priceEvent);
-		MyButtonRendererAndEditor btnBuy = new MyButtonRendererAndEditor("预定", buyEvent);
+		MyButtonRendererAndEditor btnPrice = new MyButtonRendererAndEditor("票价", priceEvent, "price");
+		MyButtonRendererAndEditor btnBuy = new MyButtonRendererAndEditor("预定", buyEvent, "buy");
 
 		trainTable.getColumnModel().getColumn(15).setCellRenderer(btnPrice);
 		trainTable.getColumnModel().getColumn(15).setCellEditor(btnPrice);
@@ -138,6 +139,9 @@ public class TicketsPanel extends JPanel {
 		trainTable.getColumnModel().getColumn(1).setPreferredWidth(125);
 		trainTable.getColumnModel().getColumn(2).setPreferredWidth(95);
 		trainTable.getColumnModel().getColumn(3).setPreferredWidth(45);
+		
+		trainTable.getColumnModel().getColumn(15).setPreferredWidth(75);
+		trainTable.getColumnModel().getColumn(16).setMinWidth(75);
 		
 		centerhPane.add(new JScrollPane(trainTable), BorderLayout.CENTER);
 	}

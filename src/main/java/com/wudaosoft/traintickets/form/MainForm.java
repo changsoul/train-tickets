@@ -25,9 +25,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -51,7 +53,12 @@ import javax.swing.JTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.wudaosoft.traintickets.Action;
+import com.wudaosoft.traintickets.cons.ApiCons;
+import com.wudaosoft.traintickets.exception.ServiceException;
 import com.wudaosoft.traintickets.model.TrainInfoRow;
 import com.wudaosoft.traintickets.model.TrainInfoTableModel;
 import com.wudaosoft.traintickets.model.UserInfo;
@@ -131,8 +138,33 @@ public class MainForm extends JFrame {
 			@Override
 			public void windowOpened(WindowEvent e) {
 				//initNetwork();
+				
+				JSONObject rs = JSON.parseObject("{\"validateMessagesShowId\":\"_validatorMessage\",\"status\":true,\"httpstatus\":200,\"data\":{\"result\":[\"|预订|5l00000G8523|G85|AOH|IZQ|AOH|IZQ|08:00|14:51|06:51|N|YTHBNjKwG%2FvO7lAewuFW4EOwRkPxwtqV4seTRCluFwyY47jv|20171019|3|H2|01|05|0|0|||||||||||无|无|无||O0M090|OM9\",\"FyVVIaRV431uEz56YAsUdrFpg7mZUWrthoNyRontBAtpW2m5VjV2hl8vuZhoYbZQehe1uDW8W4%2Fp%0AL4a7tfH1e8yp9trPKfqgEsLs8UCjVQ8bFM%2F2uqf3c6ZP5K2Es19c%2BL4mVReDF16I1On3tVNp7Vva%0AZw9tabFNPyRPD73pxlQMdzPpCEi4pYIShf5NJ%2Fe7eclQY7FwNWFSmJBQX1IfoMhae7cKSR7NyoYy%0AXi%2B%2FXD4m3ucH|预订|5l000G130151|G1301|AOH|IZQ|AOH|IZQ|10:23|19:03|08:40|Y|7v1DUFgE1mRsP8tZ8irIhGmzD2CTB1aTpzpoVM5%2FXKnzhDAG|20171019|3|H2|01|19|0|0|||||||||||有|有|4||O0M090|OM9\",\"1JBLsOPvwVrsPZ1Hl8P2pk%2BpcFuf1Rixa9zPp6SrBvaTd6tGPcjgTBT2a6BHZpvW4rttW81KTMjg%0Aleb%2FbRBS78yIpYvC59N1xBFtO5KaZrwof2g1qHZ23X82brdgGYR7GCi7H88BFvbiCNiElkr4oCXa%0AtQ6v0i1OhV5%2FZh26Ol3ef7LvSu1snqcGviYcJbTSRe%2FlwsnALbh5kFoSd%2BdT%2FHQWNd7Hmx9u9%2FlR%0ApiUpRxA7HfytFQCAsg%3D%3D|预订|550000T16941|T169|SNH|GZQ|SNH|GZQ|10:50|05:24|18:34|Y|cIdGwxO5WmKlJN3kBt3pO1bx%2B%2Fh53ioE1uULGFD6vdLs39rR4I3ceLQ%2FZ1g%3D|20171019|3|H6|01|12|0|0||||无|||有||无|7|||||10401030|1413\",\"%2FWtb3EGd04GNywT0LamSQ5uDODyCQvaAh2Xu2lA5WrQP0V2H7Et8%2FXm%2BFpMfGSJsRU%2FiM6kUF7Tg%0AsSL5R6VBtUIsZ8UXfN%2BZ%2B1euoh1nIdL%2FB9u7Dq2W2jZvtWhSYO2Jv2sUjUkZzQ3mSpysfWCoqKdV%0AYTE6cl3t8ngBhFpFohw%2FJkN4sN75kLEYuL9CdvumYlNLGzKyWWeO7kBiZA9QnVqTsQXNpmpUX8Ff%0AECRGeZ%2FplFxa|预订|5l000G130342|G1303|AOH|IZQ|AOH|IZQ|14:10|22:45|08:35|Y|CtUwx%2Fz7jlixT1g8pXS7AInj%2F9F98nP69i5BtDF11E%2FMg1F4|20171019|3|H2|01|18|0|0|||||||||||有|20|11||O0M090|OM9\",\"r%2BCrf7m51VQLGwfCCKt%2B2kM%2BII6HS6oimekLxjFAeu84wr1xfdb3UvborNkfY0gT9LqUMej4sOPp%0AxEd1TaBGVRKXyZ3S%2BUTIJp2Y9hpqZXA9Wo%2FnF1Vzw%2B0FPe%2FqhJFNwbvrcAjGEW9x4JykYqOCTQme%0AQm8dZJIMveBVjciL47124A29891yOgSNLd1xonXFYIt%2FkEBY3rnkhNfcybX1qhtNwqxYf4rFtBNx%0AFwfb%2FFWjMCAT|预订|5l000G130520|G1305|AOH|IZQ|AOH|IZQ|15:25|23:20|07:55|Y|nEuI8WH1ish8o%2FrU5U%2Bn%2F6%2BGe0i2%2FkII0qoA4jfBg8lg55jF|20171019|3|H2|01|13|0|0|||||||||||有|有|3||O0M090|OM9\",\"VfoFytHOIzLQ2ilurhNNFhZxHY5dMkeMrqRnqfGSWwuw0s2PiqU%2BQeR7EzPHMQLw9lMx9wayhl4X%0AjoD0cl7LR38n7mgQvYTY4HVN%2BBeobyJZnlrcjajjeVto%2BK4h8qxAmZRYI4WFQFr8Ju4pFi0sevLq%0Aq%2FiS0Wzb4E160s8kIVs4xAy6iU7mY9Yu4JFPQ6v9kH5h26Mtcu5ZYNMmmIzFppJD52ZvkJtdxWd7%0AqA%3D%3D|预订|5500000Z9930|Z99|SHH|JQO|SHH|GGQ|17:45|10:08|16:23|Y|5rFyJdqSlcDqB8v8K9coN9M83Z%2BLLIGGNHbfKuwvsfVaPUAY|20171019|3|H3|01|04|0|0|||||||有||无|有|||||101030|113\",\"cTZcVmyWKaJuc%2BkYvpLFp8rP7dn4NxQz6eRuD9cBIwD%2Fdj6wRk%2BItMJU4KDSi1ALMNoTvXqEWm9J%0AvdvT%2F54ukVYcxvKr48NsarTI4pVVBDiNpEvFVZ%2B6kVtGR0lC31VRnbrYwQwG8MmAMhq6mbMi0nFd%0AsrdxwwtY6QxvgEZkNMWLlPR92frrEcwD%2BKE6uef4ZlvgOH%2FOKz5Iaxhh2yTyjWZ73qeIHjzjMRfZ%0AJ8%2BkMpWmaEugYSWKoQ%3D%3D|预订|540000K527A4|K527|NJH|GZQ|SNH|GZQ|19:15|18:48|23:33|Y|9mzjXOWnO6BX54gVZTsU5%2F7hbBjNC5EXtI%2FSqk4BOk%2BrSlh1XX1qbuj%2FcBI%3D|20171019|3|H3|06|28|0|0||||无|||有||有|有|||||10401030|1413\",\"gA7%2B3p3yC5d5yM9SpCNo15RbJoM79b12TCQVin0fClwIXGbFB%2FbQ84E6peltvly8nL%2BpeqY0mwbX%0ArNIwE5qUYdyqvFOtb6q5XIAghALnzy9rVU4duAF3J3KeLpRZmZcZ2TauTkSjD56%2Fnwq8pYK2z9XV%0AIt%2F3FwGcid4bJDVIpWnNWZ85DN%2FKcLjdewQmm1we1%2Fd1%2BLNkWSKNRL2hsWUwsIeoQEbXpkJHnwjy%0A7pTWo2DbMJvd0NzE0g%3D%3D|预订|550000K51163|K511|SNH|VUQ|SNH|GZQ|19:21|17:14|21:53|Y|OsECk%2BxHXjHpZ44f53OF5r2PF6VNtWK3Gx6npC43Ur6xT1WhEteccuS%2BOGQ%3D|20171019|3|H2|01|17|0|0||||无|||有||无|有|||||10401030|1413\"],\"flag\":\"1\",\"map\":{\"GGQ\":\"广州东\",\"AOH\":\"上海虹桥\",\"SHH\":\"上海\",\"GZQ\":\"广州\",\"SNH\":\"上海南\",\"IZQ\":\"广州南\"}},\"messages\":[],\"validateMessages\":{}}");
+				
+				String messages = rs.getString("messages");
+				if(!"[]".equals(messages))
+					throw new ServiceException(messages);
+				
+				JSONObject data = rs.getJSONObject("data");
+				
+				if(data == null)
+					return;
+				
+				JSONArray result = data.getJSONArray("result");
+				
+				if(result.isEmpty())
+					return;
+				
+				String[] rows = new String[result.size()];
+				result.toArray(rows);
+				
+				List<TrainInfoRow>  rowList = new ArrayList<TrainInfoRow>(rows.length);
+				
+				for(String r : rows) {
+					rowList.add(TrainInfoRow.fromData(r));
+				}
 
-				ticketsPanel.setTrainInfoRow(Arrays.asList(TrainInfoRow.fromData("5cAidSfSXimDOL2NXkwIV6iQdVtq%2Fyjg9P5iw6PuEod3k9ktdE6BNacctI%2Fw316st71vgUqLJDA9%0AVHjTaUv7RdA7MRzSiWBqzmxwVz6VLVaXfchSJp7DtJ7YU5WFq%2F7WZzzBfHbNZbJerc2mVAojM7Qm%0AzA00tj1pACqHGuEmDVsy7oMXMXG3iHFV7%2Bv6xFsX4%2FxstUE4o4YRrEtvqbzWMMqwqIDctN%2Fv1fIV%0AM7D7VzoI4O%2Be|预订|5l00000G8523|G85|AOH|IZQ|AOH|IZQ|08:00|14:51|06:51|Y|bCW2hjgxU7L%2FSWI3X0DRUjwofXLcLC7OYFlPpi71jTwb%2FUxy|20171011|3|H2|01|05|0|0|||||||||||9|10|5||O0M090|OM9")));
+				ticketsPanel.setTrainInfoRow(rowList);
 			}
 		});
 		
