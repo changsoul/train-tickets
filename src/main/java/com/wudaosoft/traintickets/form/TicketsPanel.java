@@ -84,7 +84,11 @@ public class TicketsPanel extends JPanel {
 		add(southPane, BorderLayout.SOUTH);
 	}
 
-	public void initTrainTable() {
+	public JTable getTrainTable() {
+		return trainTable;
+	}
+
+	protected void initTrainTable() {
 		trainModel = new TrainInfoTableModel();
 
 		trainTable = new JTable(trainModel); // 创建一个列表框
@@ -114,7 +118,8 @@ public class TicketsPanel extends JPanel {
 			public void invoke(ActionEvent e) {
 				MyButton button = (MyButton) e.getSource();
 				// loginClick(button);
-
+				
+				showTicketPrice(button);
 			}
 		};
 
@@ -129,25 +134,50 @@ public class TicketsPanel extends JPanel {
 		MyButtonRendererAndEditor btnPrice = new MyButtonRendererAndEditor("票价", priceEvent, "price");
 		MyButtonRendererAndEditor btnBuy = new MyButtonRendererAndEditor("预定", buyEvent, "buy");
 
+		trainTable.getColumnModel().getColumn(1).setCellRenderer(new StationTableCellRenderer());
+		
 		trainTable.getColumnModel().getColumn(15).setCellRenderer(btnPrice);
 		trainTable.getColumnModel().getColumn(15).setCellEditor(btnPrice);
 
 		trainTable.getColumnModel().getColumn(16).setCellRenderer(btnBuy);
 		trainTable.getColumnModel().getColumn(16).setCellEditor(btnBuy);
 		
-		trainTable.getColumnModel().getColumn(0).setPreferredWidth(60);
-		trainTable.getColumnModel().getColumn(1).setPreferredWidth(125);
+		trainTable.getColumnModel().getColumn(0).setPreferredWidth(80);
+		trainTable.getColumnModel().getColumn(1).setMinWidth(170);
 		trainTable.getColumnModel().getColumn(2).setPreferredWidth(95);
 		trainTable.getColumnModel().getColumn(3).setPreferredWidth(45);
 		
-		trainTable.getColumnModel().getColumn(15).setPreferredWidth(75);
-		trainTable.getColumnModel().getColumn(16).setMinWidth(75);
+		trainTable.getColumnModel().getColumn(15).setPreferredWidth(80);
+		trainTable.getColumnModel().getColumn(16).setMinWidth(80);
 		
 		centerhPane.add(new JScrollPane(trainTable), BorderLayout.CENTER);
 	}
 
-	public void setTrainInfoRow(List<TrainInfoRow> trainInfoRows) {
-		trainModel.setTrainInfoRow(trainInfoRows);
-		updateUI();
+	/**
+	 * @param button
+	 */
+	protected void showTicketPrice(MyButton button) {
+		action.showTicketPrice(this, button);
 	}
+
+	public void updateTrainTable(List<TrainInfoRow> trainInfoRows) {
+		trainModel.setTrainInfoRow(trainInfoRows);
+		trainTable.updateUI();
+	}
+	
+//	public TrainInfoRow getTrainInfoRowByTrainNo(String trainNo) {
+//		
+//		if (trainNo == null)
+//			return null;
+//		
+//		Iterator<TrainInfoRow> iter = trainModel.getTrainInfoRows().iterator();
+//		
+//		while (iter.hasNext()) {
+//			TrainInfoRow train = iter.next();
+//			if(trainNo.equals(train.getQueryLeftNewDTO().getTrainNo()))
+//				return train;
+//		}
+//		
+//		return null;
+//	}
 }

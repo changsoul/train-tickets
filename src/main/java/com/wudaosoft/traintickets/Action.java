@@ -36,6 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.http.HttpRequestInterceptor;
@@ -56,7 +57,9 @@ import com.wudaosoft.traintickets.cons.ApiCons;
 import com.wudaosoft.traintickets.exception.ServiceException;
 import com.wudaosoft.traintickets.form.MainForm;
 import com.wudaosoft.traintickets.form.MyButton;
+import com.wudaosoft.traintickets.form.TicketsPanel;
 import com.wudaosoft.traintickets.model.ApplyStatus;
+import com.wudaosoft.traintickets.model.TrainInfo;
 import com.wudaosoft.traintickets.model.TrainInfoRow;
 import com.wudaosoft.traintickets.model.UserInfo;
 import com.wudaosoft.traintickets.net.CookieUtil;
@@ -440,7 +443,9 @@ public class Action {
 		params.put("seat_types", seatTypes);
 		params.put("train_date", trainDate);
 		
-		return request.getAjax(hostConfig.getHostUrl(), ApiCons.QUERY_TICKET_PRICE_AJAX, userInfo.getContext()).getJSONObject("data");
+		String referer = "https://kyfw.12306.cn/otn/leftTicket/init";
+		
+		return request.getAjax(hostConfig.getHostUrl(), ApiCons.QUERY_TICKET_PRICE_AJAX, params, userInfo.getContext(), referer).getJSONObject("data");
 	}
 	
 	public void queryLeftTicket(String trainNo, String fromStationNo, String toStationNo, String seatTypes, String trainDate, UserInfo userInfo) throws Exception {
@@ -451,7 +456,7 @@ public class Action {
 		params.put("seat_types", seatTypes);
 		params.put("train_date", trainDate);
 		
-		JSONObject rs = request.getAjax(hostConfig.getHostUrl(), ApiCons.QUERY_LEFTTICKET_AJAX, userInfo.getContext());
+		JSONObject rs = request.getAjax(hostConfig.getHostUrl(), ApiCons.QUERY_LEFTTICKET_AJAX, params, userInfo.getContext());
 		
 		String messages = rs.getString("messages");
 		if(!"[]".equals(messages))
@@ -464,7 +469,7 @@ public class Action {
 		
 		JSONArray result = data.getJSONArray("result");
 		
-		if(result.isEmpty())
+		if(result == null || result.isEmpty())
 			return;
 		
 		String[] rows = new String[result.size()];
@@ -869,6 +874,138 @@ public class Action {
 	
 	private boolean checkApiResult(String code, JSONObject rs) {
 		return code.equals(rs.getString(RESULT_CODE_KEY)) ? true : false;
+	}
+
+	/**
+	 * @param ticketsPanel
+	 * @param button
+	 */
+	public void showTicketPrice(final TicketsPanel ticketsPanel, final MyButton button) {
+
+		final String trainDate = "2017-10-21";
+		
+		executorService.execute(new Runnable() {
+			
+			@Override
+			public void run() {
+				TrainInfo train = button.getTrainInfoRow().getQueryLeftNewDTO();
+				
+				try {
+					JSONObject data = queryTicketPrice(train.getTrainNo(), train.getFromStationNo(), train.getToStationNo(), train.getSeatTypes(), trainDate, defaultUser);
+					
+					if(data == null)
+						return;
+					
+					if(!train.getTrainNo().equals(data.getString("train_no")))
+						return;
+					
+					String A9 = data.getString("A9");
+					if (StringUtils.isNotBlank(A9) && !"--".equals(train.getSwzNum())) {
+						if("无".equals(train.getSwzNum())) {
+							train.setSwzNum(train.getSwzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + A9 + ")");
+						} else {
+							train.setSwzNum(train.getSwzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + A9 + ")</span>");
+						}
+					}
+					
+					String P = data.getString("P");
+					if (StringUtils.isNotBlank(P) && !"--".equals(train.getTzNum())) {
+						if("无".equals(train.getTzNum())) {
+							train.setTzNum(train.getTzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + P + ")");
+						} else {
+							train.setTzNum(train.getTzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + P + ")</span>");
+						}
+					}
+					
+					String M = data.getString("M");
+					if (StringUtils.isNotBlank(M) && !"--".equals(train.getZyNum())) {
+						if("无".equals(train.getZyNum())) {
+							train.setZyNum(train.getZyNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + M + ")");
+						} else {
+							train.setZyNum(train.getZyNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + M + ")</span>");
+						}
+					}
+					
+					String O = data.getString("O");
+					if (StringUtils.isNotBlank(O) && !"--".equals(train.getZeNum())) {
+						if("无".equals(train.getZeNum())) {
+							train.setZeNum(train.getZeNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + O + ")");
+						} else {
+							train.setZeNum(train.getZeNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + O + ")</span>");
+						}
+					}
+					
+					String A6 = data.getString("A6");
+					if (StringUtils.isNotBlank(A6) && !"--".equals(train.getGrNum())) {
+						if("无".equals(train.getGrNum())) {
+							train.setGrNum(train.getGrNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + A6 + ")");
+						} else {
+							train.setGrNum(train.getGrNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + A6 + ")</span>");
+						}
+					}
+					
+					String A4 = data.getString("A4");
+					if (StringUtils.isNotBlank(A4) && !"--".equals(train.getRwNum())) {
+						if("无".equals(train.getRwNum())) {
+							train.setRwNum(train.getRwNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + A4 + ")");
+						} else {
+							train.setRwNum(train.getRwNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + A4 + ")</span>");
+						}
+					}
+					
+					String F = data.getString("F");
+					if (StringUtils.isNotBlank(F) && !"--".equals(train.getSrrbNum())) {
+						if("无".equals(train.getSrrbNum())) {
+							train.setSrrbNum(train.getSrrbNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + F + ")");
+						} else {
+							train.setSrrbNum(train.getSrrbNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + F + ")</span>");
+						}
+					}
+					
+					String A3 = data.getString("A3");
+					if (StringUtils.isNotBlank(A3) && !"--".equals(train.getYwNum())) {
+						if("无".equals(train.getYwNum())) {
+							train.setYwNum(train.getYwNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + A3 + ")");
+						} else {
+							train.setYwNum(train.getYwNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + A3 + ")</span>");
+						}
+					}
+					
+					String A2 = data.getString("A2");
+					if (StringUtils.isNotBlank(A2) && !"--".equals(train.getRzNum())) {
+						if("无".equals(train.getRzNum())) {
+							train.setRzNum(train.getRzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + A2 + ")");
+						} else {
+							train.setRzNum(train.getRzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + A2 + ")</span>");
+						}
+					}
+					
+					String A1 = data.getString("A1");
+					if (StringUtils.isNotBlank(A1) && !"--".equals(train.getYzNum())) {
+						if("无".equals(train.getYzNum())) {
+							train.setYzNum(train.getYzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + A1 + ")");
+						} else {
+							train.setYzNum(train.getYzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + A1 + ")</span>");
+						}
+					}
+					
+					String WZ = data.getString("WZ");
+					if (StringUtils.isNotBlank(WZ) && !"--".equals(train.getWzNum())) {
+						if("无".equals(train.getWzNum())) {
+							train.setWzNum(train.getWzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " (" + WZ + ")");
+						} else {
+							train.setWzNum(train.getWzNum().replaceAll(" [<|\\(].+[\\)|>]", "") + " <span style=\"color:#fc8302\">(" + WZ + ")</span>");
+						}
+					}
+					
+					ticketsPanel.getTrainTable().updateUI();
+					
+				} catch (Exception e) {
+					log.error("Query ticket price error: " + e.getMessage(), e);
+					JOptionPane.showMessageDialog(null, "查询标价失败！", "错误", JOptionPane.WARNING_MESSAGE);
+				}
+			}
+		});
 	}
 
 }

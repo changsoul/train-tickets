@@ -17,8 +17,12 @@ package com.wudaosoft.traintickets.form;
 
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.Serializable;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
@@ -36,13 +40,32 @@ public class StationTableCellRenderer extends JPanel implements TableCellRendere
 	private static final long serialVersionUID = 4998499295179511220L;
 	
 	private JLabel lbS = new JLabel();
+	private JLabel lbC = new JLabel();
 	private JLabel lbE = new JLabel();
+	
+	private ImageIcon iconS;
+	private ImageIcon iconP;
+	private ImageIcon iconE;
 	
 	public StationTableCellRenderer() {
 		super();
-		setLayout(new FlowLayout(FlowLayout.CENTER));
+		setLayout(new FlowLayout(FlowLayout.CENTER, 5, 11));
+		
+		lbS.setIconTextGap(3);
+		lbE.setIconTextGap(3);
+		lbE.setHorizontalTextPosition(JLabel.LEFT);
 		add(lbS);
+		add(lbC);
 		add(lbE);
+		
+		try {
+			BufferedImage imgTmp = ImageIO.read(this.getClass().getResource("/icon.png"));
+			iconS = new ImageIcon(imgTmp.getSubimage(0, 546, 14, 18));
+			iconP = new ImageIcon(imgTmp.getSubimage(0, 446, 14, 18));
+			iconE = new ImageIcon(imgTmp.getSubimage(0, 496, 14, 18));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -52,22 +75,29 @@ public class StationTableCellRenderer extends JPanel implements TableCellRendere
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 			int row, int column) {
 		
-		TrainInfo trian = ((TrainInfoTableModel)table.getModel()).getTrainInfoRow(row).getQueryLeftNewDTO();
-		
-		if (trian.getFromStationTelecode() != null && trian.getFromStationTelecode().equals(trian.getStartStationTelecode())) {
-			
+		if (row % 2 == 0) {
+			super.setBackground(TrainTableCellRenderer.bg1);
 		} else {
-			
+			super.setBackground(table.getBackground());
 		}
 		
-		if (trian.getToStationTelecode() != null && trian.getToStationTelecode().equals(trian.getEndStationTelecode())) {
-			
+		TrainInfo train = ((TrainInfoTableModel)table.getModel()).getTrainInfoRow(row).getQueryLeftNewDTO();
+		
+		if (train.getFromStationTelecode() != null && train.getFromStationTelecode().equals(train.getStartStationTelecode())) {
+			lbS.setIcon(iconS);
 		} else {
-			
+			lbS.setIcon(iconP);
 		}
 		
-		lbS.setText(trian.getFromStationName());
-		lbE.setText(trian.getToStationName());
+		if (train.getToStationTelecode() != null && train.getToStationTelecode().equals(train.getEndStationTelecode())) {
+			lbE.setIcon(iconE);
+		} else {
+			lbS.setIcon(iconP);
+		}
+		
+		lbS.setText(train.getFromStationName());
+		lbC.setText("-" + (Integer.parseInt(train.getToStationNo()) - Integer.parseInt(train.getFromStationNo())) + "-");
+		lbE.setText(train.getToStationName());
 		return this;
 	}
 

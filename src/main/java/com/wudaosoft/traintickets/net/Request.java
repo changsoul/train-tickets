@@ -296,17 +296,24 @@ public class Request {
 
 	public JSONObject getAjax(final String hostUrl, String urlSuffix, HttpClientContext context) throws Exception {
 
-		return getAjax(hostUrl, urlSuffix, null, context);
+		return getAjax(hostUrl, urlSuffix, null, context, null);
+	}
+	
+	public JSONObject getAjax(final String hostUrl, String urlSuffix, Map<String, String> params, HttpClientContext context) throws Exception {
+		
+		return getAjax(hostUrl, urlSuffix, params, context, null);
 	}
 
 	public JSONObject getAjax(final String hostUrl, String urlSuffix, Map<String, String> params,
-			HttpClientContext context) throws Exception {
+			HttpClientContext context, String referer) throws Exception {
 
 		String url = hostUrl + urlSuffix;
 		url = buildReqUrl(url, params);
 
 		HttpGet httpGet = new HttpGet(url);
 
+		if(referer != null)
+			httpGet.addHeader("Referer", referer);
 		setAjaxHeader(httpGet, context);
 
 		JSONObject rs = getHttpClient().execute(httpGet, new JsonResponseHandler(), context);
@@ -325,7 +332,6 @@ public class Request {
 		url = buildReqUrl(url);
 
 		HttpPost httpPost = new HttpPost(url);
-		setAjaxHeader(httpPost, context);
 
 		if (params != null) {
 			UrlEncodedFormEntity postEntity = buildUrlEncodedFormEntity(params);
@@ -343,12 +349,20 @@ public class Request {
 
 	public JSONObject postAjax(final String hostUrl, String urlSuffix, Map<String, String> params,
 			HttpClientContext context) throws Exception {
+		
+		return postAjax(hostUrl, urlSuffix, params, context, null);
+	}
+	
+	public JSONObject postAjax(final String hostUrl, String urlSuffix, Map<String, String> params,
+			HttpClientContext context, String referer) throws Exception {
 
 		String url = hostUrl + urlSuffix;
 		url = buildReqUrl(url);
 
 		HttpPost httpPost = new HttpPost(url);
-
+		
+		if(referer != null)
+			httpPost.addHeader("Referer", referer);
 		setAjaxHeader(httpPost, context);
 
 		if (params != null) {

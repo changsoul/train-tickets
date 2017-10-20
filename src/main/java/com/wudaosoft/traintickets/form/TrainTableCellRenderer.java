@@ -17,9 +17,17 @@ package com.wudaosoft.traintickets.form;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
+
+import com.wudaosoft.traintickets.model.TrainInfo;
+import com.wudaosoft.traintickets.model.TrainInfoTableModel;
 
 /**
  * @author Changsoul Wu
@@ -33,6 +41,19 @@ public class TrainTableCellRenderer extends DefaultTableCellRenderer {
 
 	private static final long serialVersionUID = -2311196188678249405L;
 
+	private ImageIcon iconIDC;
+
+	public TrainTableCellRenderer() {
+		super();
+		setHorizontalTextPosition(JLabel.LEFT);
+		try {
+			BufferedImage imgTmp = ImageIO.read(this.getClass().getResource("/icon.png"));
+			iconIDC = new ImageIcon(imgTmp.getSubimage(0, 100, 16, 13));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 			int row, int column) {
@@ -42,17 +63,36 @@ public class TrainTableCellRenderer extends DefaultTableCellRenderer {
 		} else {
 			super.setBackground(table.getBackground());
 		}
-		
+
 		setBorder(noFocusBorder);
 		setFont(table.getFont());
-		
-		if(column >=0 && column <= 3) {
+
+		if (column >= 0 && column <= 3) {
 			super.setForeground(table.getForeground());
 		} else {
 			super.setForeground(fg1);
 		}
 
-		setValue(value);
+		if (column == 0) {
+			TrainInfo train = ((TrainInfoTableModel) table.getModel()).getTrainInfoRow(row).getQueryLeftNewDTO();
+
+			if (train.getIsSupportCard()) {
+				setIcon(iconIDC);
+			} else {
+				setIcon(null);
+			}
+
+			if ("1".equals(train.getControlledTrainFlag()) || "2".equals(train.getControlledTrainFlag())) {
+				setValue("<html><span style=\"color:red; font-size:12px; font-weight: 700\">" + value
+						+ "</span></html>");
+			} else {
+				setValue("<html><span style=\"color:#26a306; font-size:12px; font-weight: 700\">" + value
+						+ "</span></html>");
+			}
+		} else {
+			setIcon(null);
+			setValue(value);
+		}
 
 		return this;
 	}

@@ -74,10 +74,11 @@ public class TrainInfoTableModel extends AbstractTableModel {
 
 		switch (column) {
 		case 0:
-			value = "<html><span style=\"color:#26a306; font-size:12px; font-weight: 700\">" + train.getStationTrainCode() + "</span></html>";
+			value = train.getStationTrainCode();
 			break;
 		case 1:
-			value = train.getFromStationName() + " - " + train.getToStationName();
+			// value = train.getFromStationName() + " - " +
+			// train.getToStationName();
 			break;
 		case 2:
 			value = train.getStartTime() + " - " + train.getArriveTime();
@@ -166,16 +167,19 @@ public class TrainInfoTableModel extends AbstractTableModel {
 	}
 
 	private Object getCellValue(TrainInfo train, String cn, String cv, String cu) {
+
+		String v2 = getTicketNum(train, cn, cv, cu);
+		String v = v2.replaceAll(" [<|\\(].+[\\)|>]", "");
 		
-		String v = getTicketNum(train, cn, cv, cu);
-		
-		if(hasTickets(v)) {
-			return "<html><span style=\"color:#26a306; font-weight: 700\">" + v + "</span></html>";
+		if ("有".equals(v)) {
+			return "<html><span style=\"color:#26a306; font-weight: 700\">" + v2 + "</span></html>";
+		} else if (hasTickets(v)) {
+			return "<html><span style=\"color:#333333; font-weight: 700\">" + v2+ "</span></html>";
 		} else {
-			return v;
+			return v2;
 		}
 	}
-	
+
 	private String getTicketNum(TrainInfo train, String cn, String cv, String cu) {
 		String co = train.getYpEx() != null ? train.getYpEx().replace("F", "4").replace("A", "6") : null;
 		String cp = train.getControlledTrainFlag();
@@ -261,7 +265,6 @@ public class TrainInfoTableModel extends AbstractTableModel {
 	}
 
 	private boolean hasTickets(String input) {
-
 		if ("有".equals(input))
 			return true;
 
