@@ -96,7 +96,7 @@ public class StationTableCellRenderer extends JPanel implements TableCellRendere
 		}
 		
 		lbS.setText(train.getFromStationName());
-		lbC.setText("-" + (Integer.parseInt(train.getToStationNo()) - Integer.parseInt(train.getFromStationNo())) + "-");
+		lbC.setText((Integer.parseInt(train.getToStationNo()) - Integer.parseInt(train.getFromStationNo())) + "");
 		lbE.setText(train.getToStationName());
 		return this;
 	}
